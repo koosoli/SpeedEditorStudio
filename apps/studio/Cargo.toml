@@ -1,0 +1,16 @@
+[package]
+name = "se-studio"
+description = "Speed Editor Studio: visual editor and runner for Speed Editor profiles"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+mapper = { path = "../../crates/mapper" }
+runtime = { path = "../../crates/runtime" }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1.0.229", features = ["derive"] }

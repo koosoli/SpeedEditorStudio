@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Events for the main window; the app's own commands are always allowed.","local":true,"windows":["main"],"permissions":["core:default"]}}

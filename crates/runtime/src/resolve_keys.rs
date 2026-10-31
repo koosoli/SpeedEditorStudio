@@ -1,0 +1,154 @@
+//! The user's DaVinci Resolve keyboard layout: which shortcut runs which
+//! Resolve command, and how to type it on the current Windows keyboard.
+//!
+//! Resolve writes shortcuts by the character on the key ("Ctrl+Shift+[",
+//! "#"), so single characters are converted with the active keyboard layout
+//! (a German keyboard types "[" as AltGr+8).
+
+use std::collections::HashMap;
+
+use mapper::keyboard::Shortcut;
+use mapper::native::DEFAULT_SHORTCUTS;
+use windows_sys::Win32::UI::Input::KeyboardAndMouse::VkKeyScanW;
+
+const VK_SHIFT: u16 = 0x10;
+const VK_CONTROL: u16 = 0x11;
+const VK_MENU: u16 = 0x12;
+
+pub struct KeyLayout {
+    commands: HashMap<String, Vec<String>>,
+    /// Name of the Resolve layout loaded, or None for Resolve's defaults.
+    pub preset: Option<String>,
+}
+
+impl Default for KeyLayout {
+    fn default() -> Self {
+        let commands = DEFAULT_SHORTCUTS.iter().map(|(c, k)| (c.to_string(), vec![k.to_string()])).collect();
+        KeyLayout { commands, preset: None }
+    }
+}
+
+impl KeyLayout {
+    /// Reads the helper's `keyboard_layout` reply.
+    pub fn from_json(text: &str) -> Result<KeyLayout, String> {
+        #[derive(serde::Deserialize)]
+        struct Reply {
+            preset: String,
+            commands: HashMap<String, Vec<String>>,
+        }
+        let reply: Reply = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        Ok(KeyLayout { commands: reply.commands, preset: Some(reply.preset) })
+    }
+
+    /// The keys to press for a Resolve command: the first of its shortcuts
+    /// this keyboard can type. Err explains why there is none.
+    pub fn shortcut(&self, command: &str) -> Result<Shortcut, String> {
+        let specs = self.commands.get(command).filter(|s| !s.is_empty()).ok_or_else(|| {
+            format!("{command} has no shortcut in your Resolve keyboard layout")
+        })?;
+        specs
+            .iter()
+            .find_map(|spec| parse_spec(spec))
+            .ok_or_else(|| format!("cannot type {command}'s shortcut {:?} on this keyboard", specs[0]))
+    }
+}
+
+/// Converts a Resolve shortcut such as "Ctrl+Shift+[" or "Shift+F12".
+fn parse_spec(spec: &str) -> Option<Shortcut> {
+    // The key itself may be "+", written "Ctrl++".
+    let (mods, key) = match spec.strip_suffix("++") {
+        Some(rest) => (rest, "+"),
+        None => match spec.rfind('+') {
+            Some(i) if i + 1 < spec.len() => (&spec[..i], &spec[i + 1..]),
+            _ => ("", spec),
+        },
+    };
+    let mut keys = Vec::new();
+    for m in mods.split('+').filter(|m| !m.is_empty()) {
+        keys.push(match m.to_ascii_lowercase().as_str() {
+            "ctrl" | "cmd" => VK_CONTROL,
+            "shift" => VK_SHIFT,
+            "alt" | "option" => VK_MENU,
+            _ => return None,
+        });
+    }
+    match named_key(key) {
+        Some(vk) => keys.push(vk),
+        None => {
+            // A single character: ask the active keyboard layout how to type it.
+            let mut chars = key.chars();
+            let (Some(c), None) = (chars.next(), chars.next()) else {
+                return None;
+            };
+            // Resolve writes letter keys in capitals ("I") but means the plain key.
+            let c = c.to_lowercase().next().unwrap_or(c);
+            let mut units = [0u16; 2];
+            if c.encode_utf16(&mut units).len() != 1 {
+                return None;
+            }
+            let scan = unsafe { VkKeyScanW(units[0]) };
+            if scan == -1 {
+                return None;
+            }
+            let (vk, state) = ((scan & 0xff) as u16, (scan >> 8) & 0xff);
+            for (bit, modifier) in [(1, VK_SHIFT), (2, VK_CONTROL), (4, VK_MENU)] {
+                if state & bit != 0 && !keys.contains(&modifier) {
+                    keys.push(modifier);
+                }
+            }
+            keys.push(vk);
+        }
+    }
+    Some(Shortcut { keys })
+}
+
+fn named_key(name: &str) -> Option<u16> {
+    let lower = name.to_ascii_lowercase();
+    if let Some(n) = lower.strip_prefix('f').and_then(|n| n.parse::<u16>().ok()) {
+        return (1..=24).contains(&n).then(|| 0x70 + n - 1);
+    }
+    Some(match lower.as_str() {
+        "space" => 0x20,
+        "del" | "delete" => 0x2e,
+        "backspace" => 0x08,
+        "ins" | "insert" => 0x2d,
+        "left" => 0x25,
+        "up" => 0x26,
+        "right" => 0x27,
+        "down" => 0x28,
+        "pgup" | "pageup" => 0x21,
+        "pgdown" | "pgdn" | "pagedown" => 0x22,
+        "home" => 0x24,
+        "end" => 0x23,
+        "tab" => 0x09,
+        "return" | "enter" => 0x0d,
+        "esc" | "escape" => 0x1b,
+        _ => return None,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn named_and_modified_keys() {
+        assert_eq!(parse_spec("Shift+F12").unwrap().keys, vec![VK_SHIFT, 0x7b]);
+        assert_eq!(parse_spec("Space").unwrap().keys, vec![0x20]);
+        assert_eq!(parse_spec("Ctrl+Shift+Left").unwrap().keys, vec![VK_CONTROL, VK_SHIFT, 0x25]);
+    }
+
+    #[test]
+    fn letters_use_the_keyboard_layout() {
+        // Letters sit on the same virtual keys in every Latin layout.
+        assert_eq!(parse_spec("I").unwrap().keys, vec![0x49]);
+        assert_eq!(parse_spec("Ctrl+B").unwrap().keys, vec![VK_CONTROL, 0x42]);
+    }
+
+    #[test]
+    fn layout_lookup_reports_unbound_commands() {
+        let layout = KeyLayout::from_json(r#"{"preset":"X","commands":{"markIn":["I"],"editMulticamCutToAngle1":[]}}"#).unwrap();
+        assert!(layout.shortcut("markIn").is_ok());
+        assert!(layout.shortcut("editMulticamCutToAngle1").unwrap_err().contains("no shortcut"));
+    }
+}

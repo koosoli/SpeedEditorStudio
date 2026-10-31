@@ -1,0 +1,49 @@
+{
+ "baseline": [
+  "A1",
+  "A3",
+  "A4",
+  "V1",
+  "V2"
+ ],
+ "tests": {
+  "all toggled once": [
+   "A1",
+   "A3",
+   "A4",
+   "V1",
+   "V2"
+  ],
+  "all toggled once / restored": true,
+  "all toggled twice": [
+   "A1",
+   "A3",
+   "A4",
+   "V1",
+   "V2"
+  ],
+  "all toggled twice / restored": true,
+  "all once, then V1 + A1": [
+   "A3",
+   "A4",
+   "V1",
+   "V2"
+  ],
+  "all once, then V1 + A1 / restored": true,
+  "all once, then V2": [
+   "A1",
+   "A3",
+   "A4",
+   "V1",
+   "V2"
+  ],
+  "all once, then V2 / restored": true,
+  "A3 toggled, then all once (mixed state)": [
+   "A1",
+   "A4",
+   "V1",
+   "V2"
+  ],
+  "A3 toggled, then all once (mixed state) / restored": true
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "baseline": [
+  "A1",
+  "A3",
+  "A4",
+  "V1",
+  "V2"
+ ],
+ "methods": {
+  "left Alt key code (VK_LMENU)": {
+   "works": false,
+   "affected": [
+    "A1",
+    "A3",
+    "A4",
+    "V1",
+    "V2"
+   ]
+  },
+  "hardware scan codes only": {
+   "works": false,
+   "affected": [
+    "A1",
+    "A3",
+    "A4",
+    "V1",
+    "V2"
+   ]
+  },
+  "slow, with pauses (VK_MENU)": {
+   "works": false,
+   "affected": [
+    "A1",
+    "A3",
+    "A4",
+    "V1",
+    "V2"
+   ]
+  },
+  "hardware scan codes, slow": {
+   "works": false,
+   "affected": [
+    "A1",
+    "A3",
+    "A4",
+    "V1",
+    "V2"
+   ]
+  }
+ }
+}

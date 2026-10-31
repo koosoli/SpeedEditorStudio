@@ -1,0 +1,96 @@
+# Open Speed Editor Mapper profile
+#
+# CUT, DIS and SMTH CUT select pages (on release). The mapper starts on the
+# CUT page. The active page key blinks.
+# Press CUT + SMTH CUT together to switch mappings off: all three keys flash
+# briefly to confirm, then CUT, DIS and SMTH CUT act as normal transition keys
+# (the selected one stays lit). Press them together again to come back to the
+# CUT page.
+#
+# The CUT page keeps DaVinci's normal controls: only keys listed there change.
+# Holding CUT (fn_key) switches the active page to its Fn layer
+# ([pages.fn_keys]) for as long as it is held; a quick tap still selects the
+# CUT page. In normal mode CUT is just the cut transition.
+#
+# Key names: see crates/speed-editor/src/keys.rs (e.g. cam1, stop_play, in).
+# Actions:   { keys = "ctrl+shift+m" }  held as long as the key is held
+#            { run = "calc.exe" }       opens a program, file or URL
+#            { text = "Hello" }         types text
+# Extras:    label = "Scene 1"          name shown on the key in the editor
+#            hold = { keys = "f14" }    long press (half a second) does this instead
+# Wheel:     { scroll = {} } or { scroll = { horizontal = true } }
+#            { keys = { left = "left", right = "right" } }
+
+version = 1
+page_keys = ["cut", "dissolve", "smooth_cut"]
+toggle_chord = ["cut", "smooth_cut"]
+fn_key = "cut"
+
+# --- CUT: DaVinci's normal controls, plus an Fn layer ---------------------------
+# Every key keeps its normal function. Hold CUT and press another key for the
+# extra functions below. They click Resolve's own menu items, so they need no
+# shortcut and work with any keyboard layout. Each page can
+# have its own Fn layer.
+[[pages]]
+name = "DaVinci"
+# Keys you don't map here keep their native Resolve function.
+davinci_defaults = true
+# Resolve's own wheel behaviour: JOG, SHTL and SCRL switch the mode, measured
+# from the real Speed Editor in Resolve (docs/FINDINGS.md).
+wheel = { davinci = {} }
+
+[pages.fn_keys]
+in = { resolve_menu = "Trim > Ripple > Start to Playhead", label = "Ripple start to playhead" }
+out = { resolve_menu = "Trim > Ripple > End to Playhead", label = "Ripple end to playhead" }
+trim_in = { resolve_menu = "Trim > Trim Start", label = "Trim start" }
+trim_out = { resolve_menu = "Trim > Trim End", label = "Trim end" }
+slip_source = { resolve_menu = "Timeline > Select Clips > Backward on All Tracks", label = "Select clips backward" }
+slip_dest = { resolve_menu = "Timeline > Select Clips > Forward on All Tracks", label = "Select clips forward" }
+# CUT + CAM n: only video track n + audio track n take part in the next edits
+# (Resolve's Auto Track Selector); CUT + CAM 9: all tracks again.
+cam1 = { solo_track = 1, label = "Only track 1" }
+cam2 = { solo_track = 2, label = "Only track 2" }
+cam3 = { solo_track = 3, label = "Only track 3" }
+cam4 = { solo_track = 4, label = "Only track 4" }
+cam5 = { solo_track = 5, label = "Only track 5" }
+cam6 = { solo_track = 6, label = "Only track 6" }
+cam7 = { solo_track = 7, label = "Only track 7" }
+cam8 = { solo_track = 8, label = "Only track 8" }
+cam9 = { solo_track = 0, label = "All tracks" }
+
+# --- DIS: hotkeys for OBS and other apps (F13-F24 clash with nothing) ---------
+[[pages]]
+name = "Hotkeys"
+wheel = { keys = { left = "left", right = "right" } }
+
+[pages.keys]
+cam1 = { keys = "f13" }
+cam2 = { keys = "f14" }
+cam3 = { keys = "f15" }
+cam4 = { keys = "f16" }
+cam5 = { keys = "f17" }
+cam6 = { keys = "f18" }
+cam7 = { keys = "f19" }
+cam8 = { keys = "f20" }
+cam9 = { keys = "f21" }
+live_overwrite = { keys = "f22" }
+video_only = { keys = "f23" }
+audio_only = { keys = "f24" }
+escape = { keys = "ctrl+z", hold = { keys = "ctrl+y" } }
+in = { keys = "ctrl+c" }
+out = { keys = "ctrl+v" }
+source = { keys = "alt+tab" }
+
+# --- SMTH CUT: media and Windows -----------------------------------------------
+[[pages]]
+name = "Media"
+wheel = { keys = { left = "volume_down", right = "volume_up" } }
+
+[pages.keys]
+stop_play = { keys = "media_play_pause" }
+in = { keys = "media_previous" }
+out = { keys = "media_next" }
+escape = { keys = "volume_mute" }
+full_view = { keys = "f11" }
+cam1 = { run = "calc.exe" }
+cam2 = { run = "notepad.exe" }

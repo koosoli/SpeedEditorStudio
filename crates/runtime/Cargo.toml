@@ -1,0 +1,23 @@
+[package]
+name = "runtime"
+description = "Runs a profile on a connected Speed Editor: device loop, reconnects, synthetic input"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+speed-editor = { path = "../speed-editor" }
+mapper = { path = "../mapper" }
+hidapi = "2.6.7"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+uiautomation = "0.25.1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }

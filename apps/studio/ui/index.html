@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speed Editor Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Speed Editor <span>Studio</span></div>
+    <div class="profile-path" id="profilePath"></div>
+    <div class="spacer"></div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Not connected</span></div>
+    <div class="battery" id="battery" hidden></div>
+    <label class="switch" title="Take over the Speed Editor. DaVinci Resolve must be closed.">
+      <input type="checkbox" id="connectToggle"><span class="track"></span><span>Connect</span>
+    </label>
+    <label class="switch" title="When off, key presses only light up here, so you can test without triggering anything.">
+      <input type="checkbox" id="activeToggle"><span class="track"></span><span>Mappings active</span>
+    </label>
+    <label class="switch" title="On: when DaVinci Resolve starts, the app lets go and Resolve gets the Speed Editor with its own native controls (your bindings pause until Resolve quits). Off: the app keeps the Speed Editor, so your bindings work inside Resolve; start this app before Resolve.">
+      <input type="checkbox" id="yieldToggle"><span class="track"></span><span>Give to Resolve</span>
+    </label>
+    <button id="learnBtn" class="ghost" title="Press a key on the Speed Editor to select it">Learn</button>
+    <button id="importBtn" class="ghost" title="Load a profile file, e.g. from another computer">Import…</button>
+    <button id="exportBtn" class="ghost" title="Save this profile to a file you can take to another computer">Export…</button>
+    <button id="revertBtn" class="ghost" disabled>Revert</button>
+    <button id="saveBtn" class="primary" disabled>Save</button>
+  </header>
+
+  <nav class="pages" id="pageTabs"></nav>
+
+  <main class="workspace">
+    <section class="device-area">
+      <div class="list-view" id="listView" hidden></div>
+      <div class="device" id="device">
+        <div class="block left" id="blockLeft"></div>
+        <div class="block middle" id="blockMiddle"></div>
+        <div class="block right" id="blockRight">
+          <div class="wheel-wrap"><button class="wheel" id="wheel"><span class="wheel-spin" id="wheelSpin"><span class="wheel-dot"></span></span><span class="wheel-label" id="wheelLabel"></span></button></div>
+        </div>
+      </div>
+      <p class="hint" id="hint"></p>
+    </section>
+
+    <aside class="inspector" id="inspector"></aside>
+  </main>
+
+  <section class="palette">
+    <div class="palette-head">
+      <h2>Actions</h2>
+      <div class="palette-groups" id="paletteGroups"></div>
+      <input id="paletteSearch" type="search" placeholder="Search actions…">
+      <div class="assign-to" id="assignTo"></div>
+      <span class="palette-tip">Drag onto a key, or select a key and click.</span>
+    </div>
+    <div class="palette-items" id="paletteItems"></div>
+  </section>
+
+  <footer class="log" id="log"></footer>
+
+  <script src="layout.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

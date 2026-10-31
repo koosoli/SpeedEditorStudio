@@ -1,0 +1,15 @@
+[package]
+name = "speed-editor"
+description = "Protocol and device access for the Blackmagic DaVinci Resolve Speed Editor"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[features]
+default = ["device"]
+# Without this feature the crate is pure protocol code with no dependencies,
+# usable for tests, replay of recorded sessions and the mapping engine.
+device = ["dep:hidapi"]
+
+[dependencies]
+hidapi = { version = "2.6.7", optional = true }

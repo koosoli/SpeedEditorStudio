@@ -1,0 +1,11 @@
+[package]
+name = "se-mapper"
+description = "Speed Editor mapper: pages of custom shortcuts, wheel actions and program launches"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+mapper = { path = "../../crates/mapper" }
+runtime = { path = "../../crates/runtime" }
+ctrlc = "3.5.2"

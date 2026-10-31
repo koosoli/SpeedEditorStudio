@@ -1,0 +1,479 @@
+{"t":12.463693,"interface":-1,"raw":"030068010000ff000000000000","decoded":"jog   mode 0  value +360"}
+{"t":12.506552,"interface":-1,"raw":"04010000000000000000000000","decoded":"keys  +SMART INSRT             held [SMART INSRT]"}
+{"t":12.656593,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SMART INSRT             held []"}
+{"t":12.836666,"interface":-1,"raw":"04020000000000000000000000","decoded":"keys  +APPND                   held [APPND]"}
+{"t":13.001656,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -APPND                   held []"}
+{"t":13.151369,"interface":-1,"raw":"04030000000000000000000000","decoded":"keys  +RIPL O/WR               held [RIPL O/WR]"}
+{"t":13.271420,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -RIPL O/WR               held []"}
+{"t":13.542220,"interface":-1,"raw":"04040000000000000000000000","decoded":"keys  +CLOSE UP                held [CLOSE UP]"}
+{"t":13.691401,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CLOSE UP                held []"}
+{"t":13.896089,"interface":-1,"raw":"04050000000000000000000000","decoded":"keys  +PLACE ON TOP            held [PLACE ON TOP]"}
+{"t":14.021444,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -PLACE ON TOP            held []"}
+{"t":14.216347,"interface":-1,"raw":"04060000000000000000000000","decoded":"keys  +SRC O/WR                held [SRC O/WR]"}
+{"t":14.321779,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SRC O/WR                held []"}
+{"t":14.591389,"interface":-1,"raw":"04070000000000000000000000","decoded":"keys  +IN                      held [IN]"}
+{"t":14.726518,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -IN                      held []"}
+{"t":14.936481,"interface":-1,"raw":"04080000000000000000000000","decoded":"keys  +OUT                     held [OUT]"}
+{"t":15.041386,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -OUT                     held []"}
+{"t":15.281420,"interface":-1,"raw":"04090000000000000000000000","decoded":"keys  +TRIM IN                 held [TRIM IN]"}
+{"t":15.431270,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -TRIM IN                 held []"}
+{"t":15.626333,"interface":-1,"raw":"040a0000000000000000000000","decoded":"keys  +TRIM OUT                held [TRIM OUT]"}
+{"t":15.761354,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -TRIM OUT                held []"}
+{"t":15.911557,"interface":-1,"raw":"040b0000000000000000000000","decoded":"keys  +ROLL                    held [ROLL]"}
+{"t":16.031363,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -ROLL                    held []"}
+{"t":16.301436,"interface":-1,"raw":"040c0000000000000000000000","decoded":"keys  +SLIP SRC                held [SLIP SRC]"}
+{"t":16.421284,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SLIP SRC                held []"}
+{"t":16.631394,"interface":-1,"raw":"040d0000000000000000000000","decoded":"keys  +SLIP DEST               held [SLIP DEST]"}
+{"t":16.736377,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SLIP DEST               held []"}
+{"t":16.901316,"interface":-1,"raw":"040e0000000000000000000000","decoded":"keys  +TRANS DUR               held [TRANS DUR]"}
+{"t":17.006419,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -TRANS DUR               held []"}
+{"t":17.261492,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  +CUT                     held [CUT]"}
+{"t":17.381295,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CUT                     held []"}
+{"t":17.576405,"interface":-1,"raw":"04100000000000000000000000","decoded":"keys  +DIS                     held [DIS]"}
+{"t":17.696907,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -DIS                     held []"}
+{"t":17.891330,"interface":-1,"raw":"04110000000000000000000000","decoded":"keys  +SMTH CUT                held [SMTH CUT]"}
+{"t":17.996741,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SMTH CUT                held []"}
+{"t":18.461823,"interface":-1,"raw":"04310000000000000000000000","decoded":"keys  +ESC                     held [ESC]"}
+{"t":18.596363,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -ESC                     held []"}
+{"t":18.761407,"interface":-1,"raw":"041f0000000000000000000000","decoded":"keys  +SYNC BIN                held [SYNC BIN]"}
+{"t":18.896283,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SYNC BIN                held []"}
+{"t":19.106465,"interface":-1,"raw":"042c0000000000000000000000","decoded":"keys  +AUDIO LEVEL             held [AUDIO LEVEL]"}
+{"t":19.211423,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -AUDIO LEVEL             held []"}
+{"t":19.346643,"interface":-1,"raw":"042d0000000000000000000000","decoded":"keys  +FULL VIEW               held [FULL VIEW]"}
+{"t":19.436808,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -FULL VIEW               held []"}
+{"t":20.111593,"interface":-1,"raw":"04220000000000000000000000","decoded":"keys  +TRANS                   held [TRANS]"}
+{"t":20.261372,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -TRANS                   held []"}
+{"t":20.471481,"interface":-1,"raw":"042f0000000000000000000000","decoded":"keys  +SPLIT                   held [SPLIT]"}
+{"t":20.591466,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SPLIT                   held []"}
+{"t":20.771458,"interface":-1,"raw":"042e0000000000000000000000","decoded":"keys  +SNAP                    held [SNAP]"}
+{"t":20.906695,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SNAP                    held []"}
+{"t":21.071420,"interface":-1,"raw":"042b0000000000000000000000","decoded":"keys  +RIPL DEL                held [RIPL DEL]"}
+{"t":21.176329,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -RIPL DEL                held []"}
+{"t":21.506426,"interface":-1,"raw":"04390000000000000000000000","decoded":"keys  +CAM7                    held [CAM7]"}
+{"t":21.641254,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM7                    held []"}
+{"t":21.851276,"interface":-1,"raw":"043a0000000000000000000000","decoded":"keys  +CAM8                    held [CAM8]"}
+{"t":21.971227,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM8                    held []"}
+{"t":22.151348,"interface":-1,"raw":"043b0000000000000000000000","decoded":"keys  +CAM9                    held [CAM9]"}
+{"t":22.271281,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM9                    held []"}
+{"t":22.406810,"interface":-1,"raw":"04300000000000000000000000","decoded":"keys  +LIVE O/WR               held [LIVE O/WR]"}
+{"t":22.496592,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -LIVE O/WR               held []"}
+{"t":22.796257,"interface":-1,"raw":"04360000000000000000000000","decoded":"keys  +CAM4                    held [CAM4]"}
+{"t":22.916288,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM4                    held []"}
+{"t":23.141309,"interface":-1,"raw":"04370000000000000000000000","decoded":"keys  +CAM5                    held [CAM5]"}
+{"t":23.261307,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM5                    held []"}
+{"t":23.426315,"interface":-1,"raw":"04380000000000000000000000","decoded":"keys  +CAM6                    held [CAM6]"}
+{"t":23.546264,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM6                    held []"}
+{"t":23.726305,"interface":-1,"raw":"04250000000000000000000000","decoded":"keys  +VIDEO ONLY              held [VIDEO ONLY]"}
+{"t":23.831314,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -VIDEO ONLY              held []"}
+{"t":24.146214,"interface":-1,"raw":"04330000000000000000000000","decoded":"keys  +CAM1                    held [CAM1]"}
+{"t":24.281245,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM1                    held []"}
+{"t":24.476447,"interface":-1,"raw":"04340000000000000000000000","decoded":"keys  +CAM2                    held [CAM2]"}
+{"t":24.596356,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM2                    held []"}
+{"t":24.791324,"interface":-1,"raw":"04350000000000000000000000","decoded":"keys  +CAM3                    held [CAM3]"}
+{"t":24.911229,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CAM3                    held []"}
+{"t":25.076187,"interface":-1,"raw":"04260000000000000000000000","decoded":"keys  +AUDIO ONLY              held [AUDIO ONLY]"}
+{"t":25.151469,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -AUDIO ONLY              held []"}
+{"t":25.406479,"interface":-1,"raw":"043c0000000000000000000000","decoded":"keys  +STOP/PLAY               held [STOP/PLAY]"}
+{"t":25.511313,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -STOP/PLAY               held []"}
+{"t":25.871210,"interface":-1,"raw":"041a0000000000000000000000","decoded":"keys  +SOURCE                  held [SOURCE]"}
+{"t":26.203143,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SOURCE                  held []"}
+{"t":26.230729,"interface":-1,"raw":"041b0000000000000000000000","decoded":"keys  +TIMELINE                held [TIMELINE]"}
+{"t":26.246431,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -TIMELINE                held []"}
+{"t":26.486250,"interface":-1,"raw":"041c0000000000000000000000","decoded":"keys  +SHTL                    held [SHTL]"}
+{"t":26.576341,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SHTL                    held []"}
+{"t":26.606461,"interface":-1,"raw":"030300000000ff000000000000","decoded":"jog   mode 3  value +0"}
+{"t":26.831318,"interface":-1,"raw":"041d0000000000000000000000","decoded":"keys  +JOG                     held [JOG]"}
+{"t":26.906881,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -JOG                     held []"}
+{"t":26.936307,"interface":-1,"raw":"030000000000ff000000000000","decoded":"jog   mode 0  value +0"}
+{"t":27.146035,"interface":-1,"raw":"041e0000000000000000000000","decoded":"keys  +SCRL                    held [SCRL]"}
+{"t":27.236406,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -SCRL                    held []"}
+{"t":27.266375,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":27.536259,"interface":-1,"raw":"030277e2ffffff000000000000","decoded":"jog   mode 2  value -7561"}
+{"t":27.566269,"interface":-1,"raw":"03028a9dffffff000000000000","decoded":"jog   mode 2  value -25206"}
+{"t":27.581596,"interface":-1,"raw":"0302bdc7ffffff000000000000","decoded":"jog   mode 2  value -14403"}
+{"t":27.596251,"interface":-1,"raw":"0302780f0000ff000000000000","decoded":"jog   mode 2  value +3960"}
+{"t":27.626089,"interface":-1,"raw":"0302ca280000ff000000000000","decoded":"jog   mode 2  value +10442"}
+{"t":27.641140,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":27.776173,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":27.806304,"interface":-1,"raw":"0302f0f1ffffff000000000000","decoded":"jog   mode 2  value -3600"}
+{"t":27.852076,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":27.881336,"interface":-1,"raw":"030270080000ff000000000000","decoded":"jog   mode 2  value +2160"}
+{"t":27.896329,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":27.911216,"interface":-1,"raw":"030270080000ff000000000000","decoded":"jog   mode 2  value +2160"}
+{"t":27.941269,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":28.016539,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":28.136247,"interface":-1,"raw":"030296d1ffffff000000000000","decoded":"jog   mode 2  value -11882"}
+{"t":28.151142,"interface":-1,"raw":"030206daffffff000000000000","decoded":"jog   mode 2  value -9722"}
+{"t":28.181117,"interface":-1,"raw":"03021fefffffff000000000000","decoded":"jog   mode 2  value -4321"}
+{"t":28.196378,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":28.256178,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":28.271172,"interface":-1,"raw":"0302a80c0000ff000000000000","decoded":"jog   mode 2  value +3240"}
+{"t":28.301192,"interface":-1,"raw":"0302e9170000ff000000000000","decoded":"jog   mode 2  value +6121"}
+{"t":28.316185,"interface":-1,"raw":"0302891d0000ff000000000000","decoded":"jog   mode 2  value +7561"}
+{"t":28.331372,"interface":-1,"raw":"0302e9170000ff000000000000","decoded":"jog   mode 2  value +6121"}
+{"t":28.361478,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":28.377151,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":28.391265,"interface":-1,"raw":"03023edeffffff000000000000","decoded":"jog   mode 2  value -8642"}
+{"t":28.421187,"interface":-1,"raw":"0302e7eaffffff000000000000","decoded":"jog   mode 2  value -5401"}
+{"t":28.436615,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":28.451410,"interface":-1,"raw":"030258f3ffffff000000000000","decoded":"jog   mode 2  value -3240"}
+{"t":28.496373,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":28.511180,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":28.571217,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":28.601114,"interface":-1,"raw":"0302fa250000ff000000000000","decoded":"jog   mode 2  value +9722"}
+{"t":28.616278,"interface":-1,"raw":"0302891d0000ff000000000000","decoded":"jog   mode 2  value +7561"}
+{"t":28.631119,"interface":-1,"raw":"0302100e0000ff000000000000","decoded":"jog   mode 2  value +3600"}
+{"t":28.676174,"interface":-1,"raw":"03025dcdffffff000000000000","decoded":"jog   mode 2  value -12963"}
+{"t":28.691143,"interface":-1,"raw":"03024cbfffffff000000000000","decoded":"jog   mode 2  value -16564"}
+{"t":28.721107,"interface":-1,"raw":"03028dcaffffff000000000000","decoded":"jog   mode 2  value -13683"}
+{"t":28.736162,"interface":-1,"raw":"030217e8ffffff000000000000","decoded":"jog   mode 2  value -6121"}
+{"t":28.751122,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":28.781148,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":28.796344,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":28.811175,"interface":-1,"raw":"030217e8ffffff000000000000","decoded":"jog   mode 2  value -6121"}
+{"t":28.841266,"interface":-1,"raw":"030225c9ffffff000000000000","decoded":"jog   mode 2  value -14043"}
+{"t":28.856204,"interface":-1,"raw":"0302ea97ffffff000000000000","decoded":"jog   mode 2  value -26646"}
+{"t":28.871434,"interface":-1,"raw":"03022e50ffffff000000000000","decoded":"jog   mode 2  value -45010"}
+{"t":28.901039,"interface":-1,"raw":"03020907ffffff000000000000","decoded":"jog   mode 2  value -63735"}
+{"t":28.916027,"interface":-1,"raw":"0302bdc7feffff000000000000","decoded":"jog   mode 2  value -79939"}
+{"t":28.931134,"interface":-1,"raw":"0302acb9feffff000000000000","decoded":"jog   mode 2  value -83540"}
+{"t":28.961142,"interface":-1,"raw":"03021feffeffff000000000000","decoded":"jog   mode 2  value -69857"}
+{"t":28.976116,"interface":-1,"raw":"03021d42ffffff000000000000","decoded":"jog   mode 2  value -48611"}
+{"t":28.991069,"interface":-1,"raw":"03028870ffffff000000000000","decoded":"jog   mode 2  value -36728"}
+{"t":29.021107,"interface":-1,"raw":"03024f6cffffff000000000000","decoded":"jog   mode 2  value -37809"}
+{"t":29.036326,"interface":-1,"raw":"03026654ffffff000000000000","decoded":"jog   mode 2  value -43930"}
+{"t":29.051403,"interface":-1,"raw":"0302dc36ffffff000000000000","decoded":"jog   mode 2  value -51492"}
+{"t":29.081264,"interface":-1,"raw":"03026327ffffff000000000000","decoded":"jog   mode 2  value -55453"}
+{"t":29.096291,"interface":-1,"raw":"03026b2effffff000000000000","decoded":"jog   mode 2  value -53653"}
+{"t":29.111158,"interface":-1,"raw":"03026e5bffffff000000000000","decoded":"jog   mode 2  value -42130"}
+{"t":29.141159,"interface":-1,"raw":"030274b5ffffff000000000000","decoded":"jog   mode 2  value -19084"}
+{"t":29.156233,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":29.171176,"interface":-1,"raw":"03024b3f0000ff000000000000","decoded":"jog   mode 2  value +16203"}
+{"t":29.186274,"interface":-1,"raw":"03020e610000ff000000000000","decoded":"jog   mode 2  value +24846"}
+{"t":29.216502,"interface":-1,"raw":"030219950000ff000000000000","decoded":"jog   mode 2  value +38169"}
+{"t":29.231262,"interface":-1,"raw":"0302b6ed0000ff000000000000","decoded":"jog   mode 2  value +60854"}
+{"t":29.246328,"interface":-1,"raw":"0302322a0100ff000000000000","decoded":"jog   mode 2  value +76338"}
+{"t":29.276255,"interface":-1,"raw":"03022d500100ff000000000000","decoded":"jog   mode 2  value +86061"}
+{"t":29.291491,"interface":-1,"raw":"0302ae660100ff000000000000","decoded":"jog   mode 2  value +91822"}
+{"t":29.306538,"interface":-1,"raw":"030268810100ff000000000000","decoded":"jog   mode 2  value +98664"}
+{"t":29.336340,"interface":-1,"raw":"03022aa30100ff000000000000","decoded":"jog   mode 2  value +107306"}
+{"t":29.351239,"interface":-1,"raw":"03025aa00100ff000000000000","decoded":"jog   mode 2  value +106586"}
+{"t":29.366235,"interface":-1,"raw":"03023d5e0100ff000000000000","decoded":"jog   mode 2  value +89661"}
+{"t":29.396351,"interface":-1,"raw":"030219150100ff000000000000","decoded":"jog   mode 2  value +70937"}
+{"t":29.411292,"interface":-1,"raw":"030216e80000ff000000000000","decoded":"jog   mode 2  value +59414"}
+{"t":29.426215,"interface":-1,"raw":"0302aee60000ff000000000000","decoded":"jog   mode 2  value +59054"}
+{"t":29.456272,"interface":-1,"raw":"0302780f0200ff000000000000","decoded":"jog   mode 2  value +135032"}
+{"t":29.471719,"interface":-1,"raw":"03029a2b0100ff000000000000","decoded":"jog   mode 2  value +76698"}
+{"t":29.486242,"interface":-1,"raw":"030254460100ff000000000000","decoded":"jog   mode 2  value +83540"}
+{"t":29.516316,"interface":-1,"raw":"03026d5b0100ff000000000000","decoded":"jog   mode 2  value +88941"}
+{"t":29.531487,"interface":-1,"raw":"03022d500100ff000000000000","decoded":"jog   mode 2  value +86061"}
+{"t":29.546305,"interface":-1,"raw":"0302022d0100ff000000000000","decoded":"jog   mode 2  value +77058"}
+{"t":29.576157,"interface":-1,"raw":"0302d8090100ff000000000000","decoded":"jog   mode 2  value +68056"}
+{"t":29.591394,"interface":-1,"raw":"030200000100ff000000000000","decoded":"jog   mode 2  value +65536"}
+{"t":29.636262,"interface":-1,"raw":"030297fe0000ff000000000000","decoded":"jog   mode 2  value +65175"}
+{"t":29.651384,"interface":-1,"raw":"0302a80c0100ff000000000000","decoded":"jog   mode 2  value +68776"}
+{"t":29.666167,"interface":-1,"raw":"03029a2b0100ff000000000000","decoded":"jog   mode 2  value +76698"}
+{"t":29.696580,"interface":-1,"raw":"0302133b0100ff000000000000","decoded":"jog   mode 2  value +80659"}
+{"t":29.711167,"interface":-1,"raw":"03022a230100ff000000000000","decoded":"jog   mode 2  value +74538"}
+{"t":29.726252,"interface":-1,"raw":"03021eef0000ff000000000000","decoded":"jog   mode 2  value +61214"}
+{"t":29.756295,"interface":-1,"raw":"030243b80000ff000000000000","decoded":"jog   mode 2  value +47171"}
+{"t":29.771231,"interface":-1,"raw":"030268810000ff000000000000","decoded":"jog   mode 2  value +33128"}
+{"t":29.786219,"interface":-1,"raw":"03025c4d0000ff000000000000","decoded":"jog   mode 2  value +19804"}
+{"t":29.816242,"interface":-1,"raw":"030262270000ff000000000000","decoded":"jog   mode 2  value +10082"}
+{"t":29.831205,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":29.846329,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":29.876216,"interface":-1,"raw":"03021fefffffff000000000000","decoded":"jog   mode 2  value -4321"}
+{"t":29.996425,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":30.011360,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":30.026231,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":30.056255,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":30.116197,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":30.251184,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":30.266169,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":30.326155,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":30.356345,"interface":-1,"raw":"0302780f0000ff000000000000","decoded":"jog   mode 2  value +3960"}
+{"t":30.371187,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":30.416279,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":30.431336,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":30.506042,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":30.581342,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":30.626819,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":30.746307,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":30.761347,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":30.866431,"interface":-1,"raw":"0302fed2ffffff000000000000","decoded":"jog   mode 2  value -11522"}
+{"t":30.881396,"interface":-1,"raw":"0302fba5ffffff000000000000","decoded":"jog   mode 2  value -23045"}
+{"t":30.911468,"interface":-1,"raw":"03027f69ffffff000000000000","decoded":"jog   mode 2  value -38529"}
+{"t":30.926165,"interface":-1,"raw":"03029b2bffffff000000000000","decoded":"jog   mode 2  value -54373"}
+{"t":30.941251,"interface":-1,"raw":"0302f8f8feffff000000000000","decoded":"jog   mode 2  value -67336"}
+{"t":30.971171,"interface":-1,"raw":"030277e2feffff000000000000","decoded":"jog   mode 2  value -73097"}
+{"t":30.986166,"interface":-1,"raw":"030247e5feffff000000000000","decoded":"jog   mode 2  value -72377"}
+{"t":31.001172,"interface":-1,"raw":"0302afe6feffff000000000000","decoded":"jog   mode 2  value -72017"}
+{"t":31.031332,"interface":-1,"raw":"030258f3feffff000000000000","decoded":"jog   mode 2  value -68776"}
+{"t":31.046245,"interface":-1,"raw":"03023904ffffff000000000000","decoded":"jog   mode 2  value -64455"}
+{"t":31.061184,"interface":-1,"raw":"030230fdfeffff000000000000","decoded":"jog   mode 2  value -66256"}
+{"t":31.091164,"interface":-1,"raw":"03021feffeffff000000000000","decoded":"jog   mode 2  value -69857"}
+{"t":31.106343,"interface":-1,"raw":"030217e8feffff000000000000","decoded":"jog   mode 2  value -71657"}
+{"t":31.121525,"interface":-1,"raw":"030206dafeffff000000000000","decoded":"jog   mode 2  value -75258"}
+{"t":31.151365,"interface":-1,"raw":"03024cbffeffff000000000000","decoded":"jog   mode 2  value -82100"}
+{"t":31.166106,"interface":-1,"raw":"03027f69fdffff000000000000","decoded":"jog   mode 2  value -169601"}
+{"t":31.181110,"interface":-1,"raw":"0302b7edfeffff000000000000","decoded":"jog   mode 2  value -70217"}
+{"t":31.211142,"interface":-1,"raw":"0302e43dffffff000000000000","decoded":"jog   mode 2  value -49692"}
+{"t":31.226182,"interface":-1,"raw":"0302f878ffffff000000000000","decoded":"jog   mode 2  value -34568"}
+{"t":31.241226,"interface":-1,"raw":"03024f6cffffff000000000000","decoded":"jog   mode 2  value -37809"}
+{"t":31.271215,"interface":-1,"raw":"0302065affffff000000000000","decoded":"jog   mode 2  value -42490"}
+{"t":31.301235,"interface":-1,"raw":"0302607affffff000000000000","decoded":"jog   mode 2  value -34208"}
+{"t":31.331188,"interface":-1,"raw":"0302798fffffff000000000000","decoded":"jog   mode 2  value -28807"}
+{"t":31.346105,"interface":-1,"raw":"0302c3a1ffffff000000000000","decoded":"jog   mode 2  value -24125"}
+{"t":31.361181,"interface":-1,"raw":"0302b5c0ffffff000000000000","decoded":"jog   mode 2  value -16203"}
+{"t":31.391333,"interface":-1,"raw":"030258f3ffffff000000000000","decoded":"jog   mode 2  value -3240"}
+{"t":31.406181,"interface":-1,"raw":"0302b91a0000ff000000000000","decoded":"jog   mode 2  value +6841"}
+{"t":31.421227,"interface":-1,"raw":"03024b3f0000ff000000000000","decoded":"jog   mode 2  value +16203"}
+{"t":31.451196,"interface":-1,"raw":"03027b3c0000ff000000000000","decoded":"jog   mode 2  value +15483"}
+{"t":31.466244,"interface":-1,"raw":"0302022d0000ff000000000000","decoded":"jog   mode 2  value +11522"}
+{"t":31.481205,"interface":-1,"raw":"03025a200000ff000000000000","decoded":"jog   mode 2  value +8282"}
+{"t":31.511209,"interface":-1,"raw":"0302211c0000ff000000000000","decoded":"jog   mode 2  value +7201"}
+{"t":31.526058,"interface":-1,"raw":"030254460000ff000000000000","decoded":"jog   mode 2  value +18004"}
+{"t":31.541202,"interface":-1,"raw":"0302219c0000ff000000000000","decoded":"jog   mode 2  value +39969"}
+{"t":31.571110,"interface":-1,"raw":"0302b6ed0000ff000000000000","decoded":"jog   mode 2  value +60854"}
+{"t":31.586277,"interface":-1,"raw":"0302b91a0100ff000000000000","decoded":"jog   mode 2  value +72377"}
+{"t":31.601147,"interface":-1,"raw":"030219150100ff000000000000","decoded":"jog   mode 2  value +70937"}
+{"t":31.631244,"interface":-1,"raw":"030257f30000ff000000000000","decoded":"jog   mode 2  value +62295"}
+{"t":31.646262,"interface":-1,"raw":"03028ff70000ff000000000000","decoded":"jog   mode 2  value +63375"}
+{"t":31.661239,"interface":-1,"raw":"03025a200100ff000000000000","decoded":"jog   mode 2  value +73818"}
+{"t":31.691129,"interface":-1,"raw":"0302c44e0100ff000000000000","decoded":"jog   mode 2  value +85700"}
+{"t":31.706226,"interface":-1,"raw":"03020e610100ff000000000000","decoded":"jog   mode 2  value +90382"}
+{"t":31.721188,"interface":-1,"raw":"030243380100ff000000000000","decoded":"jog   mode 2  value +79939"}
+{"t":31.751090,"interface":-1,"raw":"0302b6ed0000ff000000000000","decoded":"jog   mode 2  value +60854"}
+{"t":31.766323,"interface":-1,"raw":"0302b4c00000ff000000000000","decoded":"jog   mode 2  value +49332"}
+{"t":31.781122,"interface":-1,"raw":"030213bb0000ff000000000000","decoded":"jog   mode 2  value +47891"}
+{"t":31.811106,"interface":-1,"raw":"0302abb90000ff000000000000","decoded":"jog   mode 2  value +47531"}
+{"t":31.826182,"interface":-1,"raw":"030243b80000ff000000000000","decoded":"jog   mode 2  value +47171"}
+{"t":31.841064,"interface":-1,"raw":"030273b50000ff000000000000","decoded":"jog   mode 2  value +46451"}
+{"t":31.871179,"interface":-1,"raw":"0302219c0000ff000000000000","decoded":"jog   mode 2  value +39969"}
+{"t":31.886152,"interface":-1,"raw":"0302ae660000ff000000000000","decoded":"jog   mode 2  value +26286"}
+{"t":31.901052,"interface":-1,"raw":"030262270000ff000000000000","decoded":"jog   mode 2  value +10082"}
+{"t":31.916059,"interface":-1,"raw":"0302a80c0000ff000000000000","decoded":"jog   mode 2  value +3240"}
+{"t":31.946146,"interface":-1,"raw":"030219150000ff000000000000","decoded":"jog   mode 2  value +5401"}
+{"t":31.961220,"interface":-1,"raw":"0302780f0000ff000000000000","decoded":"jog   mode 2  value +3960"}
+{"t":31.976107,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":32.006157,"interface":-1,"raw":"0302a80c0000ff000000000000","decoded":"jog   mode 2  value +3240"}
+{"t":32.066179,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":32.126278,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":32.141179,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":32.321507,"interface":-1,"raw":"0302100e0000ff000000000000","decoded":"jog   mode 2  value +3600"}
+{"t":32.336132,"interface":-1,"raw":"0302e1100000ff000000000000","decoded":"jog   mode 2  value +4321"}
+{"t":32.366053,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":32.381169,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":32.396184,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":32.426283,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":32.441198,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":32.486118,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":32.501187,"interface":-1,"raw":"0302780f0000ff000000000000","decoded":"jog   mode 2  value +3960"}
+{"t":32.516322,"interface":-1,"raw":"0302e9170000ff000000000000","decoded":"jog   mode 2  value +6121"}
+{"t":32.546074,"interface":-1,"raw":"0302e1100000ff000000000000","decoded":"jog   mode 2  value +4321"}
+{"t":32.606137,"interface":-1,"raw":"0302100e0000ff000000000000","decoded":"jog   mode 2  value +3600"}
+{"t":32.621288,"interface":-1,"raw":"0302b1130000ff000000000000","decoded":"jog   mode 2  value +5041"}
+{"t":32.636151,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":32.740985,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":32.756031,"interface":-1,"raw":"0302f0f1ffffff000000000000","decoded":"jog   mode 2  value -3600"}
+{"t":32.786260,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":32.816191,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":32.846111,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":32.861317,"interface":-1,"raw":"0302b91a0000ff000000000000","decoded":"jog   mode 2  value +6841"}
+{"t":32.876028,"interface":-1,"raw":"030249120000ff000000000000","decoded":"jog   mode 2  value +4681"}
+{"t":32.906106,"interface":-1,"raw":"03022a230000ff000000000000","decoded":"jog   mode 2  value +9002"}
+{"t":32.920999,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":32.936000,"interface":-1,"raw":"0302a80c0000ff000000000000","decoded":"jog   mode 2  value +3240"}
+{"t":32.966093,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":32.981143,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":32.996189,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":33.100934,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":33.115995,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":33.146292,"interface":-1,"raw":"0302f11e0000ff000000000000","decoded":"jog   mode 2  value +7921"}
+{"t":33.161134,"interface":-1,"raw":"03029a2b0000ff000000000000","decoded":"jog   mode 2  value +11162"}
+{"t":33.176241,"interface":-1,"raw":"03023b310000ff000000000000","decoded":"jog   mode 2  value +12603"}
+{"t":33.205948,"interface":-1,"raw":"0302db360000ff000000000000","decoded":"jog   mode 2  value +14043"}
+{"t":33.221175,"interface":-1,"raw":"03028c4a0000ff000000000000","decoded":"jog   mode 2  value +19084"}
+{"t":33.235919,"interface":-1,"raw":"0302de630000ff000000000000","decoded":"jog   mode 2  value +25566"}
+{"t":33.250936,"interface":-1,"raw":"0302c77b0000ff000000000000","decoded":"jog   mode 2  value +31687"}
+{"t":33.280941,"interface":-1,"raw":"0302219c0000ff000000000000","decoded":"jog   mode 2  value +39969"}
+{"t":33.295944,"interface":-1,"raw":"03020bb40000ff000000000000","decoded":"jog   mode 2  value +46091"}
+{"t":33.311017,"interface":-1,"raw":"0302ecc40000ff000000000000","decoded":"jog   mode 2  value +50412"}
+{"t":33.340984,"interface":-1,"raw":"03022dd00000ff000000000000","decoded":"jog   mode 2  value +53293"}
+{"t":33.356077,"interface":-1,"raw":"0302c4ce0000ff000000000000","decoded":"jog   mode 2  value +52932"}
+{"t":33.371078,"interface":-1,"raw":"030284c30000ff000000000000","decoded":"jog   mode 2  value +50052"}
+{"t":33.401114,"interface":-1,"raw":"0302dbb60000ff000000000000","decoded":"jog   mode 2  value +46811"}
+{"t":33.415965,"interface":-1,"raw":"0302d2af0000ff000000000000","decoded":"jog   mode 2  value +45010"}
+{"t":33.431048,"interface":-1,"raw":"030273b50000ff000000000000","decoded":"jog   mode 2  value +46451"}
+{"t":33.461114,"interface":-1,"raw":"030254c60000ff000000000000","decoded":"jog   mode 2  value +50772"}
+{"t":33.476196,"interface":-1,"raw":"0302cdd50000ff000000000000","decoded":"jog   mode 2  value +54733"}
+{"t":33.490957,"interface":-1,"raw":"030246e50000ff000000000000","decoded":"jog   mode 2  value +58694"}
+{"t":33.520891,"interface":-1,"raw":"030227f60000ff000000000000","decoded":"jog   mode 2  value +63015"}
+{"t":33.535930,"interface":-1,"raw":"0302780f0100ff000000000000","decoded":"jog   mode 2  value +69496"}
+{"t":33.550928,"interface":-1,"raw":"0302fa250100ff000000000000","decoded":"jog   mode 2  value +75258"}
+{"t":33.580994,"interface":-1,"raw":"0302db360100ff000000000000","decoded":"jog   mode 2  value +79579"}
+{"t":33.596021,"interface":-1,"raw":"03028c4a0100ff000000000000","decoded":"jog   mode 2  value +84620"}
+{"t":33.611099,"interface":-1,"raw":"030265540100ff000000000000","decoded":"jog   mode 2  value +87141"}
+{"t":33.641091,"interface":-1,"raw":"030224490100ff000000000000","decoded":"jog   mode 2  value +84260"}
+{"t":33.656173,"interface":-1,"raw":"0302db360100ff000000000000","decoded":"jog   mode 2  value +79579"}
+{"t":33.670942,"interface":-1,"raw":"03023b310100ff000000000000","decoded":"jog   mode 2  value +78139"}
+{"t":33.701025,"interface":-1,"raw":"03025a200100ff000000000000","decoded":"jog   mode 2  value +73818"}
+{"t":33.716025,"interface":-1,"raw":"03021eef0000ff000000000000","decoded":"jog   mode 2  value +61214"}
+{"t":33.731082,"interface":-1,"raw":"03027bbc0000ff000000000000","decoded":"jog   mode 2  value +48251"}
+{"t":33.760924,"interface":-1,"raw":"030292a40000ff000000000000","decoded":"jog   mode 2  value +42130"}
+{"t":33.775990,"interface":-1,"raw":"030262a70000ff000000000000","decoded":"jog   mode 2  value +42850"}
+{"t":33.791367,"interface":-1,"raw":"03025aa00000ff000000000000","decoded":"jog   mode 2  value +41050"}
+{"t":33.821499,"interface":-1,"raw":"030200800000ff000000000000","decoded":"jog   mode 2  value +32768"}
+{"t":33.836276,"interface":-1,"raw":"0302cd550000ff000000000000","decoded":"jog   mode 2  value +21965"}
+{"t":33.851386,"interface":-1,"raw":"0302c2210000ff000000000000","decoded":"jog   mode 2  value +8642"}
+{"t":33.896117,"interface":-1,"raw":"0302c5ceffffff000000000000","decoded":"jog   mode 2  value -12603"}
+{"t":33.911111,"interface":-1,"raw":"0302fba5ffffff000000000000","decoded":"jog   mode 2  value -23045"}
+{"t":33.941424,"interface":-1,"raw":"0302987effffff000000000000","decoded":"jog   mode 2  value -33128"}
+{"t":33.956399,"interface":-1,"raw":"0302d65cffffff000000000000","decoded":"jog   mode 2  value -41770"}
+{"t":33.971238,"interface":-1,"raw":"03022549ffffff000000000000","decoded":"jog   mode 2  value -46811"}
+{"t":34.001344,"interface":-1,"raw":"03021d42ffffff000000000000","decoded":"jog   mode 2  value -48611"}
+{"t":34.016552,"interface":-1,"raw":"03029e58ffffff000000000000","decoded":"jog   mode 2  value -42850"}
+{"t":34.031413,"interface":-1,"raw":"03020080ffffff000000000000","decoded":"jog   mode 2  value -32768"}
+{"t":34.061116,"interface":-1,"raw":"0302f29effffff000000000000","decoded":"jog   mode 2  value -24846"}
+{"t":34.076014,"interface":-1,"raw":"0302fba5ffffff000000000000","decoded":"jog   mode 2  value -23045"}
+{"t":34.091098,"interface":-1,"raw":"03022ba3ffffff000000000000","decoded":"jog   mode 2  value -23765"}
+{"t":34.121156,"interface":-1,"raw":"0302f29effffff000000000000","decoded":"jog   mode 2  value -24846"}
+{"t":34.136083,"interface":-1,"raw":"03028a9dffffff000000000000","decoded":"jog   mode 2  value -25206"}
+{"t":34.151184,"interface":-1,"raw":"03026baeffffff000000000000","decoded":"jog   mode 2  value -20885"}
+{"t":34.181126,"interface":-1,"raw":"03025dcdffffff000000000000","decoded":"jog   mode 2  value -12963"}
+{"t":34.196205,"interface":-1,"raw":"0302f0f1ffffff000000000000","decoded":"jog   mode 2  value -3600"}
+{"t":34.211168,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":34.240916,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":34.256030,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":34.270994,"interface":-1,"raw":"0302e7eaffffff000000000000","decoded":"jog   mode 2  value -5401"}
+{"t":34.301109,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":34.316029,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":34.406292,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":34.496302,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":34.541011,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":34.616045,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":34.645992,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":34.751214,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":34.766083,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":34.795899,"interface":-1,"raw":"030270080000ff000000000000","decoded":"jog   mode 2  value +2160"}
+{"t":34.811024,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":34.826125,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":34.871016,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":34.916000,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":35.111010,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":35.155984,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":35.365997,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":35.396012,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":35.470991,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":35.546140,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":35.575961,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":35.606100,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":35.651048,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":35.666127,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":35.696008,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":35.710943,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":35.756119,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":35.771011,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":35.785907,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":36.026389,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":36.146067,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":36.160985,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":36.191003,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":36.221083,"interface":-1,"raw":"0302d8090000ff000000000000","decoded":"jog   mode 2  value +2520"}
+{"t":36.251003,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":36.266040,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":36.280909,"interface":-1,"raw":"0302a0050000ff000000000000","decoded":"jog   mode 2  value +1440"}
+{"t":36.310835,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":36.326019,"interface":-1,"raw":"030208070000ff000000000000","decoded":"jog   mode 2  value +1800"}
+{"t":36.340919,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":36.371163,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":36.446044,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":36.461067,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":36.505947,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":39.703240,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":39.703784,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":39.704202,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":39.704591,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":39.716295,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":39.731150,"interface":-1,"raw":"030288f0ffffff000000000000","decoded":"jog   mode 2  value -3960"}
+{"t":39.761248,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":39.776142,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":39.791156,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":39.821133,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":40.032383,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":40.106171,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":40.136290,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":40.151155,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":40.256231,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":40.271128,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":40.286336,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":46.153538,"interface":-1,"raw":"04070000000000000000000000","decoded":"keys  +IN                      held [IN]"}
+{"t":46.209080,"interface":-1,"raw":"04070008000000000000000000","decoded":"keys  +OUT                     held [IN, OUT]"}
+{"t":46.334459,"interface":-1,"raw":"04070000000000000000000000","decoded":"keys  -OUT                     held [IN]"}
+{"t":46.382868,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -IN                      held []"}
+{"t":46.493909,"interface":-1,"raw":"04080000000000000000000000","decoded":"keys  +OUT                     held [OUT]"}
+{"t":46.527946,"interface":-1,"raw":"04080007000000000000000000","decoded":"keys  +IN                      held [OUT, IN]"}
+{"t":46.658705,"interface":-1,"raw":"04070000000000000000000000","decoded":"keys  -OUT                     held [IN]"}
+{"t":46.719295,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -IN                      held []"}
+{"t":53.083162,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  +CUT                     held [CUT]"}
+{"t":53.411621,"interface":-1,"raw":"040f0007000000000000000000","decoded":"keys  +IN                      held [CUT, IN]"}
+{"t":53.546714,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":53.547350,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  -IN                      held [CUT]"}
+{"t":53.561629,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":53.801711,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CUT                     held []"}
+{"t":53.906548,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":53.921544,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":53.936524,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":53.966564,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":53.996835,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":54.026513,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":54.071665,"interface":-1,"raw":"070054faffffff000000000000","decoded":"batt  84%"}
+{"t":54.086616,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":54.101507,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":54.116605,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":54.146538,"interface":-1,"raw":"030258f3ffffff000000000000","decoded":"jog   mode 2  value -3240"}
+{"t":54.161615,"interface":-1,"raw":"0302f0f1ffffff000000000000","decoded":"jog   mode 2  value -3600"}
+{"t":54.221541,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  +CUT                     held [CUT]"}
+{"t":54.243857,"interface":-1,"raw":"030288f0ffffff000000000000","decoded":"jog   mode 2  value -3960"}
+{"t":54.244025,"interface":-1,"raw":"0302f0f1ffffff000000000000","decoded":"jog   mode 2  value -3600"}
+{"t":54.282005,"interface":-1,"raw":"030258f3ffffff000000000000","decoded":"jog   mode 2  value -3240"}
+{"t":54.341593,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":54.356556,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":54.386607,"interface":-1,"raw":"0302c0f4ffffff000000000000","decoded":"jog   mode 2  value -2880"}
+{"t":54.401502,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":54.416472,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":54.446582,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":54.461486,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":54.521528,"interface":-1,"raw":"030228f6ffffff000000000000","decoded":"jog   mode 2  value -2520"}
+{"t":54.536698,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":54.566547,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":54.581537,"interface":-1,"raw":"030290f7ffffff000000000000","decoded":"jog   mode 2  value -2160"}
+{"t":54.596532,"interface":-1,"raw":"0302f8f8ffffff000000000000","decoded":"jog   mode 2  value -1800"}
+{"t":54.656529,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":54.686579,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":54.716525,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":54.761546,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":54.776470,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":54.806938,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":54.821555,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":54.836636,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":54.866596,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":54.881585,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":54.896557,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":54.926591,"interface":-1,"raw":"0302c8fbffffff000000000000","decoded":"jog   mode 2  value -1080"}
+{"t":54.956711,"interface":-1,"raw":"030230fdffffff000000000000","decoded":"jog   mode 2  value -720"}
+{"t":55.091838,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CUT                     held []"}
+{"t":55.094268,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":55.121821,"interface":-1,"raw":"030260faffffff000000000000","decoded":"jog   mode 2  value -1440"}
+{"t":55.136626,"interface":-1,"raw":"030298feffffff000000000000","decoded":"jog   mode 2  value -360"}
+{"t":57.131585,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  +CUT                     held [CUT]"}
+{"t":57.538107,"interface":-1,"raw":"040f0007000000000000000000","decoded":"keys  +IN                      held [CUT, IN]"}
+{"t":57.611629,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":57.656540,"interface":-1,"raw":"040f0000000000000000000000","decoded":"keys  -IN                      held [CUT]"}
+{"t":57.716992,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":57.731525,"interface":-1,"raw":"030238040000ff000000000000","decoded":"jog   mode 2  value +1080"}
+{"t":57.746808,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":57.821550,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}
+{"t":57.851566,"interface":-1,"raw":"04000000000000000000000000","decoded":"keys  -CUT                     held []"}
+{"t":57.856226,"interface":-1,"raw":"0302d0020000ff000000000000","decoded":"jog   mode 2  value +720"}
+{"t":57.881874,"interface":-1,"raw":"030268010000ff000000000000","decoded":"jog   mode 2  value +360"}

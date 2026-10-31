@@ -1,0 +1,11 @@
+[package]
+name = "se-probe"
+description = "Speed Editor protocol probe: list interfaces, watch reports read-only, or take control"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+speed-editor = { path = "../../crates/speed-editor" }
+hidapi = "2.6.7"
+ctrlc = "3.5.2"

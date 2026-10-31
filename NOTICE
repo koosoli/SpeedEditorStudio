@@ -1,0 +1,10 @@
+Open Speed Editor Mapper
+
+This project contains code ported from bmd.py by Sylvain Munaut:
+  Copyright (C) 2021 Sylvain Munaut <tnt@246tNt.com>
+  Licensed under the Apache License, Version 2.0
+  https://github.com/smunaut/blackmagic-misc/blob/master/bmd.py
+
+Ported parts: the authentication algorithm and constants
+(crates/speed-editor/src/auth.rs), and the key code, LED and jog mode
+tables (crates/speed-editor/src/keys.rs).

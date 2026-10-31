@@ -1,0 +1,11 @@
+[package]
+name = "mapper"
+description = "Profiles, pages and the key/wheel mapping engine (pure logic, no device or OS access)"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+speed-editor = { path = "../speed-editor", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.8"

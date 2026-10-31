@@ -1,0 +1,11 @@
+{"dir": "in", "kind": "jog", "mode": 2, "value": -5041, "extra": 255, "time": 1793465296.12903, "rel": 0.0, "device": 3, "endpoint": "0x81", "raw": "03024fecffffff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": -1080, "extra": 255, "time": 1793465296.145001, "rel": 0.016, "device": 3, "endpoint": "0x81", "raw": "0302c8fbffffff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465296.321, "rel": 0.192, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465296.360988, "rel": 0.232, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465298.8572, "rel": 2.7282, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465302.840983, "rel": 6.712, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465307.536992, "rel": 11.408, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 360, "extra": 255, "time": 1793465348.353002, "rel": 52.224, "device": 3, "endpoint": "0x81", "raw": "030268010000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 720, "extra": 255, "time": 1793465348.377016, "rel": 52.248, "device": 3, "endpoint": "0x81", "raw": "0302d0020000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 2160, "extra": 255, "time": 1793465348.393015, "rel": 52.264, "device": 3, "endpoint": "0x81", "raw": "030270080000ff"}
+{"dir": "in", "kind": "jog", "mode": 2, "value": 1080, "extra": 255, "time": 1793465348.417016, "rel": 52.288, "device": 3, "endpoint": "0x81", "raw": "030238040000ff"}
