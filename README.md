@@ -68,9 +68,35 @@ for your own mapping.
 - DaVinci Resolve (developed and measured with Resolve Studio 21.1). For the script actions,
   set *Preferences › System › General › External scripting using* to **Local**.
 - A DaVinci Resolve Speed Editor, over USB or paired over Bluetooth.
-- Recommended: [usbip-win2](https://github.com/vadimgrn/usbip-win2/releases) (free,
-  Microsoft-signed drivers) for pass-through of native keys to Resolve. No restart was needed
-  after installing it.
+- **[usbip-win2](https://github.com/vadimgrn/usbip-win2/releases)** for the full native
+  behaviour (see below).
+
+### Install usbip-win2 first
+
+Speed Editor Studio hands the Speed Editor's native keys and the jog wheel to Resolve through
+an emulated Speed Editor. Windows needs a driver to plug in such a virtual device, and
+usbip-win2 provides it: free, open source and with Microsoft-signed drivers.
+
+1. Download `USBip-<version>-x64.exe` from the
+   [usbip-win2 releases](https://github.com/vadimgrn/usbip-win2/releases).
+2. Run it and confirm the Windows admin prompt; the default options are fine. A restart is
+   usually not needed.
+
+The app finds usbip-win2 by itself; there is nothing to configure. Its status line says
+"Resolve pass-through on" when it works.
+
+**Without usbip-win2** the app still runs, but imitates the native keys with Resolve's
+shortcuts and menus. Then some Speed Editor functions do nothing until you map them yourself,
+because Resolve has no keyboard command for them: CLOSE UP, TRANS DUR, SYNC BIN, SMTH CUT (as
+a transition), SRC O/WR and others.
+
+## Ready-made builds
+
+Speed Editor Studio needs **no installation**: unzip the download and start
+`Speed Editor Studio.exe`. Your settings are kept in `%APPDATA%\OpenSpeedEditor`.
+
+The program isn't code-signed yet, so on first start Windows SmartScreen may say "Windows
+protected your PC". Click **More info › Run anyway**; it won't ask again.
 
 ## Build and run
 
@@ -123,10 +149,10 @@ trim. Decoded captures are in [`docs/captures`](docs/captures).
 
 ## Known limits
 
-- Without usbip-win2, some Speed Editor functions have no Resolve keyboard command, so they do
-  nothing until you map them: CLOSE UP, TRANS DUR, SYNC BIN, SMTH CUT (as a transition), SRC
-  O/WR and others. Some shortcuts can't be typed on every keyboard layout (for example `[`, `]`
-  and some Alt+F combinations on a German layout); those go through Resolve's menus.
+- Without usbip-win2, some Speed Editor functions do nothing until you map them (see
+  [Install usbip-win2 first](#install-usbip-win2-first)). Some shortcuts can't be typed on every
+  keyboard layout (for example `[`, `]` and some Alt+F combinations on a German layout); those
+  go through Resolve's menus.
 - The emulated device doesn't yet give the real device's answer in the authentication
   handshake (the device side uses an unknown calculation). Resolve retries and then accepts it
   anyway; a future Resolve version might be stricter.
