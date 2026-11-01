@@ -23,7 +23,7 @@ const S = {
   leds: 0,               // key LED bitfield last sent to the device
   held: new Set(),
   error: null,
-  layer: "base",         // "base" or "fn": which layer of the page is edited
+  layer: "base",         // "base" or a modifier key id: which layer of the page is edited
   view: "picture",       // "picture" (device diagram) or "list" (all mappings)
   paletteGroup: "All",
   assignTo: "press",     // palette clicks set the "press" or the "hold" action
@@ -40,7 +40,7 @@ const api = window.__TAURI__
 function mockApi() {
   // Lets the UI open in a plain browser for design work; nothing is saved.
   const doc = {
-    version: 1, page_keys: ["cut", "dissolve", "smooth_cut"], toggle_chord: ["cut", "smooth_cut"], fn_key: "cut",
+    version: 1, page_keys: ["cut", "dissolve", "smooth_cut"], toggle_chord: ["cut", "smooth_cut"], fn_key: "cut", modifier_keys: ["dissolve", "smooth_cut"],
     pages: [
       { name: "DaVinci", davinci_defaults: true, wheel: { davinci: {} }, keys: {}, fn_keys: {
         in: { resolve_menu: "Trim > Ripple > Start to Playhead", label: "Ripple start to playhead" }, out: { resolve_menu: "Trim > Ripple > End to Playhead", label: "Ripple end to playhead" },
@@ -76,17 +76,37 @@ function mockApi() {
 
 const page = () => S.doc.pages[S.page];
 const isPageKey = id => S.doc.page_keys.includes(id);
-const fnKeyLabel = () => KEY_LABELS[S.doc.fn_key] || S.doc.fn_key;
+const keyLabel = id => KEY_LABELS[id] || id;
 
-// The Fn layer shows when chosen, or while the Fn key is held on the device.
-const fnLayer = () => !!S.doc.fn_key && (S.layer === "fn" || S.held.has(S.doc.fn_key));
+// Keys that pick a layer when held with another key: the Fn key (CUT) first,
+// then the other modifier keys (DIS, SMTH CUT).
+const modifiers = () => [S.doc.fn_key, ...(S.doc.modifier_keys || [])].filter(Boolean);
 
-// Mappings of the layer being edited. With `create`, makes sure it exists.
-function layer(create) {
-  if (!fnLayer()) return page().keys;
-  if (create && !page().fn_keys) page().fn_keys = {};
-  return page().fn_keys || {};
+// The layer shown: a modifier held on the device, else the one chosen above.
+function activeLayer() {
+  const held = modifiers().find(m => S.held.has(m));
+  if (held) return held;
+  return modifiers().includes(S.layer) ? S.layer : "base";
 }
+const fnLayer = () => activeLayer() !== "base";
+const layerPrefix = l => (l === "base" ? "" : keyLabel(l) + " + ");
+
+// Mappings of one layer of a page. With `create`, makes sure it exists.
+function layerKeys(p, l, create) {
+  if (l === "base") return p.keys;
+  if (l === S.doc.fn_key) {
+    if (create && !p.fn_keys) p.fn_keys = {};
+    return p.fn_keys || {};
+  }
+  if (create) {
+    p.layers = p.layers || {};
+    p.layers[l] = p.layers[l] || {};
+  }
+  return (p.layers && p.layers[l]) || {};
+}
+
+// Mappings of the layer being edited.
+const layer = create => layerKeys(page(), activeLayer(), create);
 const dirty = () => JSON.stringify(S.doc) !== S.savedJson;
 
 function log(text) {
@@ -125,7 +145,7 @@ function updateMapping(keyId, edit) {
 
 function setPress(keyId, action) {
   updateMapping(keyId, m => {
-    delete m.keys; delete m.run; delete m.text; delete m.resolve; delete m.resolve_key; delete m.solo_track; delete m.resolve_menu; delete m.params;
+    delete m.keys; delete m.run; delete m.text; delete m.resolve; delete m.resolve_key; delete m.solo_track; delete m.select_track; delete m.resolve_menu; delete m.params;
     if (action) Object.assign(m, action);
   });
 }
@@ -144,6 +164,7 @@ function paletteGroups() {
   for (const [path, name] of RESOLVE_MENU_ITEMS) functions.push([name, { resolve_menu: path }]);
   for (let n = 1; n <= 8; n++) functions.push([`Only track ${n}`, { solo_track: n }]);
   functions.push(["All tracks", { solo_track: 0 }]);
+  for (let n = 1; n <= 8; n++) functions.push([`Select clip on track ${n}`, { select_track: n }]);
   const groups = [{ group: "DaVinci functions", items: functions }, ...PALETTE];
   return resolve.length ? [{ group: "DaVinci scripts", items: resolve }, ...groups] : groups;
 }
@@ -209,10 +230,10 @@ function renderTabs() {
     views.append(b);
   }
   tabs.push(el("div", "spacer"), views);
-  if (S.doc.fn_key && S.view === "picture") {
+  if (modifiers().length && S.view === "picture") {
     const seg = el("div", "segmented layer-switch");
-    for (const [k, text] of [["base", "Keys"], ["fn", `Fn layer · hold ${fnKeyLabel()}`]]) {
-      const b = el("button", (fnLayer() ? "fn" : "base") === k ? "on" : "", text);
+    for (const [k, text] of [["base", "Keys"], ...modifiers().map(m => [m, `${keyLabel(m)} + key`])]) {
+      const b = el("button", activeLayer() === k ? "on" : "", text);
       b.onclick = () => { S.layer = k; render(); };
       seg.append(b);
     }
@@ -286,9 +307,12 @@ function keyButton(id, label, span, opts) {
   if (opts.led) b.append(el("span", "led" + (ledOn(id) ? " on" : "")));
   b.append(el("span", "cap", label));
   if (opts.alt) b.append(el("span", "alt", `(${opts.alt})`));
-  if (id === S.doc.fn_key) b.classList.add("fn-key");
+  const isModifier = modifiers().includes(id);
+  if (isModifier) b.classList.add("fn-key");
   if (pageIndex >= 0) {
-    const fnNote = id === S.doc.fn_key ? (fnLayer() ? "Fn (held)" : `Page ${pageIndex + 1} · hold: Fn`) : `Page ${pageIndex + 1}`;
+    const fnNote = isModifier
+      ? (activeLayer() === id ? "Held: + key" : `Page ${pageIndex + 1} · hold: + key`)
+      : `Page ${pageIndex + 1}`;
     b.append(el("span", "act", fnNote));
   } else {
     const wheelMode = page().wheel && page().wheel.davinci && !fnLayer() && ["jog", "shuttle", "scroll"].includes(id);
@@ -321,11 +345,11 @@ const KEY_ORDER = Object.values(KEY_LAYOUT).flat().filter(r => r !== "gap").flat
 function allMappings() {
   const rows = [];
   S.doc.pages.forEach((p, pageIndex) => {
-    for (const layer of ["base", "fn"]) {
-      const keys = layer === "fn" ? p.fn_keys || {} : p.keys;
+    for (const layer of ["base", ...modifiers()]) {
+      const keys = layerKeys(p, layer);
       for (const id of KEY_ORDER.filter(k => keys[k])) {
         const m = keys[id];
-        const trigger = (layer === "fn" ? fnKeyLabel() + " + " : "") + KEY_LABELS[id];
+        const trigger = layerPrefix(layer) + KEY_LABELS[id];
         const press = pressAction(m);
         if (press) rows.push({ pageIndex, layer, id, part: "press", trigger, action: press, label: m.label });
         if (m.hold) rows.push({ pageIndex, layer, id, part: "hold", trigger: trigger + " (long press)", action: m.hold, label: press ? null : m.label });
@@ -353,9 +377,9 @@ function renderList() {
     if (!pageRows.length) section.append(el("p", "info", i === 0 ? "Nothing customised: every key keeps its DaVinci function." : "Nothing mapped on this page yet."));
     for (const r of pageRows) {
       const row = el("div", "list-row");
-      const selected = S.page === i && S.selected === r.id && (r.id === "wheel" || (S.layer === "fn") === (r.layer === "fn"));
+      const selected = S.page === i && S.selected === r.id && (r.id === "wheel" || activeLayer() === r.layer);
       if (selected) row.classList.add("selected");
-      row.append(el("span", "trigger" + (r.layer === "fn" ? " fn" : ""), r.trigger));
+      row.append(el("span", "trigger" + (r.layer !== "base" ? " fn" : ""), r.trigger));
       row.append(el("span", "what", r.text || describeAction(r.action)));
       row.append(el("span", "row-label", r.label || ""));
       const del = el("button", "ghost small", "Remove");
@@ -384,7 +408,7 @@ function addMappingForm(pageIndex) {
   form.append(el("span", "field-label", "Add or change"));
   const layerSel = el("select");
   const layers = [["base", "Key"]];
-  if (S.doc.fn_key) layers.push(["fn", `${fnKeyLabel()} + key`]);
+  layers.push(...modifiers().map(m => [m, `${keyLabel(m)} + key`]));
   for (const [v, t] of layers) {
     const o = el("option", null, t);
     o.value = v;
@@ -406,7 +430,7 @@ function addMappingForm(pageIndex) {
     S.page = pageIndex;
     S.layer = layerSel.value;
     S.selected = keySel.value;
-    log(`Editing ${layerSel.value === "fn" ? fnKeyLabel() + " + " : ""}${KEY_LABELS[keySel.value]} on page ${pageIndex + 1}: choose an action on the right.`);
+    log(`Editing ${layerPrefix(layerSel.value)}${KEY_LABELS[keySel.value]} on page ${pageIndex + 1}: choose an action on the right.`);
     render();
   };
   form.append(layerSel, keySel, go);
@@ -448,13 +472,13 @@ function pageSettings() {
   name.onchange = () => { page().name = name.value; changed(); };
   const keyLabel = KEY_LABELS[S.doc.page_keys[S.page]];
   const count = Object.keys(page().keys).length;
-  const fnCount = Object.keys(page().fn_keys || {}).length;
+  const layerCounts = modifiers().map(m => `${keyLabel(m)} + key: ${Object.keys(layerKeys(page(), m)).length}`).join(", ");
   return [
     heading(`Page ${S.page + 1}`, `Selected with ${keyLabel} on the device`),
     field("Page name", name),
     el("p", "info", `${count} key${count === 1 ? "" : "s"} customised on this page. Click a key on the picture, or turn on Learn and press it on the device.`),
-    S.doc.fn_key
-      ? el("p", "info", `Fn layer: ${fnCount} combination${fnCount === 1 ? "" : "s"}. Hold ${fnKeyLabel()} and press a key to use them; switch to “Fn layer” above to edit them. A quick tap of ${fnKeyLabel()} still opens its page.`)
+    modifiers().length
+      ? el("p", "info", `Combinations (${layerCounts}). Hold ${modifiers().map(keyLabel).join(", ")} and press another key to use them; pick the layer above to edit it. A quick tap of these keys still opens their page.`)
       : el("span"),
     davinciDefaultsSwitch(),
     el("p", "info", `The active page's key blinks. ${chordText()} together switches to normal mode: every key and the wheel do their native DaVinci job (the three lights flash, then work as transition keys). Press them again to come back.`),
@@ -520,17 +544,39 @@ function pageKeyInfo(id) {
     heading(KEY_LABELS[id], `Page key ${index + 1}`),
     el("p", "info", `Releasing ${KEY_LABELS[id]} opens page ${index + 1} “${S.doc.pages[index].name}”. Page keys can't have their own action.`),
     id === S.doc.fn_key
-      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their Fn-layer action. With mappings off it is the normal cut transition.`)
-      : el("span"),
+      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their action in the “${KEY_LABELS[id]} + key” layer. On a DaVinci page, ${KEY_LABELS[id]} + wheel zooms the timeline. VIDEO ONLY or AUDIO ONLY pressed on its own (it lights up; press again to switch off) makes track choices such as CUT + CAM and DIS + CAM take only the video or only the audio. With mappings off it is the normal transition.`)
+      : modifierSwitch(id),
     inChord ? el("p", "info", `It's part of the on/off combination: ${chordText()}.`) : el("span"),
   ];
+}
+
+// Makes a page key a modifier too: held with another key, that key uses the
+// page key's own layer ("DIS + key").
+function modifierSwitch(id) {
+  const box = el("label", "switch");
+  const input = el("input");
+  input.type = "checkbox";
+  input.checked = (S.doc.modifier_keys || []).includes(id);
+  input.onchange = () => {
+    const list = (S.doc.modifier_keys || []).filter(k => k !== id);
+    if (input.checked) list.push(id);
+    S.doc.modifier_keys = S.doc.page_keys.filter(k => list.includes(k));
+    if (!S.doc.modifier_keys.length) delete S.doc.modifier_keys;
+    changed();
+  };
+  box.append(input, el("span", "track"), el("span", null, `Use ${KEY_LABELS[id]} as a modifier key`));
+  const wrap = el("div", "section");
+  wrap.append(box, el("p", "info",
+    `Held together with another key, ${KEY_LABELS[id]} picks its own layer (“${KEY_LABELS[id]} + key”) on every page. `
+    + `A quick tap on its own still opens page ${S.doc.page_keys.indexOf(id) + 1}.`));
+  return wrap;
 }
 
 function keyEditor(id) {
   const m = layer()[id] || {};
   const alt = KEY_ALT[id] ? ` (${KEY_ALT[id]})` : "";
-  const title = fnLayer() ? `${fnKeyLabel()} + ${KEY_LABELS[id]}` : KEY_LABELS[id] + alt;
-  const where = (fnLayer() ? "Fn layer " : "") + `on page ${S.page + 1} “${page().name}”`;
+  const title = fnLayer() ? `${layerPrefix(activeLayer())}${KEY_LABELS[id]}` : KEY_LABELS[id] + alt;
+  const where = (fnLayer() ? `${keyLabel(activeLayer())} layer ` : "") + `on page ${S.page + 1} “${page().name}”`;
   const nodes = [heading(title, where)];
 
   const label = el("input");
@@ -555,7 +601,7 @@ function keyEditor(id) {
 function actionSection(title, current, onSet, note) {
   const actual = actionKind(current);
   // Resolve functions (your shortcut) and Resolve scripts share the "Resolve" choice.
-  const kind = ["resolve_key", "solo_track", "resolve_menu"].includes(actual) ? "resolve" : actual || "none";
+  const kind = ["resolve_key", "solo_track", "select_track", "resolve_menu"].includes(actual) ? "resolve" : actual || "none";
   const box = el("div", "section");
   box.append(el("div", "field-label", title));
 
@@ -621,21 +667,28 @@ function resolveEditor(current, onSet) {
       RESOLVE_MENU_ITEMS.filter(m => m[2] === group).map(([path, name]) => ["menu:" + path, name]));
   }
   addGroup("Tracks · next edits only on", [...Array.from({ length: 8 }, (_, i) => [`solo:${i + 1}`, `Only track ${i + 1} (video + audio)`]), ["solo:0", "All tracks"]]);
+  addGroup("Tracks · select the clip under the playhead", Array.from({ length: 8 }, (_, i) => [`select:${i + 1}`, `Select clip on track ${i + 1} (with its sound)`]));
   for (const group of [...new Set(RESOLVE_COMMANDS.map(c => c.group))]) {
     addGroup(`${group} · script`, RESOLVE_COMMANDS.filter(c => c.group === group).map(c => ["script:" + c.id, c.name]));
   }
   select.value = current.resolve_menu !== undefined ? "menu:" + current.resolve_menu
     : current.resolve_key !== undefined ? "key:" + current.resolve_key
     : current.solo_track !== undefined ? "solo:" + current.solo_track
+    : current.select_track !== undefined ? "select:" + current.select_track
     : "script:" + current.resolve;
   select.onchange = () => {
     const [type, id] = select.value.split(/:(.*)/s);
     onSet(type === "key" ? { resolve_key: id } : type === "solo" ? { solo_track: Number(id) }
+      : type === "select" ? { select_track: Number(id) }
       : type === "menu" ? { resolve_menu: id } : { resolve: id });
   };
   const nodes = [select];
   if (current.resolve_menu !== undefined) {
     nodes.push(el("span", "note", `Clicks Resolve's menu item “${current.resolve_menu.replaceAll(">", "›")}” directly, so it needs no shortcut and works with any keyboard layout.`));
+    return nodes;
+  }
+  if (current.select_track !== undefined) {
+    nodes.push(el("span", "note", "Selects the clip under the playhead on this track, with its linked sound. With VIDEO ONLY or AUDIO ONLY lit, only that part. Uses only Resolve's own selection keys (select at playhead, then one track up or down), so no menu opens."));
     return nodes;
   }
   if (current.solo_track !== undefined) {
@@ -819,11 +872,11 @@ function renderPalette() {
       : kind === "text" ? "types " + i.action.text
       : kind === "resolve" ? "Resolve script · " + (RESOLVE_COMMANDS.find(c => c.id === i.action.resolve) || {}).group
       : kind === "resolve_key" ? "Resolve · " + (RESOLVE_KEY_COMMANDS.find(c => c[0] === i.action.resolve_key) || [])[2]
-      : kind === "solo_track" ? "Resolve · Tracks"
+      : kind === "solo_track" || kind === "select_track" ? "Resolve · Tracks"
       : kind === "resolve_menu" ? "Resolve menu · " + i.action.resolve_menu.split(">")[0].trim()
       : i.action.run;
     chip.append(el("span", "chip-detail", detail));
-    if (["resolve", "resolve_key", "solo_track", "resolve_menu"].includes(kind)) chip.classList.add("resolve");
+    if (["resolve", "resolve_key", "solo_track", "select_track", "resolve_menu"].includes(kind)) chip.classList.add("resolve");
     chip.title = target ? `Assign to ${KEY_LABELS[target]}` : "Drag onto a key, or select a key first";
     chip.ondragstart = e => e.dataTransfer.setData("application/json", JSON.stringify(i.action));
     chip.onclick = () => { if (target) assign(target, structuredClone(i.action)); };

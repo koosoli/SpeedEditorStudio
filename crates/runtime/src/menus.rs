@@ -47,6 +47,26 @@ impl Menus {
         Ok(())
     }
 
+    /// Names of the items in the submenu at `path`, without clicking any.
+    pub fn items(&mut self, path: &[String]) -> Result<Vec<String>, String> {
+        let menu = self.open(path)?;
+        let listed = expand(&menu)
+            .map_err(|e| format!("cannot open menu \"{}\": {e}", path.join(" › ")))
+            .and_then(|_| {
+                std::thread::sleep(Duration::from_millis(200));
+                self.automation
+                    .create_matcher()
+                    .from_ref(&menu)
+                    .control_type(ControlType::MenuItem)
+                    .timeout(ITEM_WAIT.as_millis() as u64)
+                    .find_all()
+                    .map_err(|e| e.to_string())
+            })
+            .map(|items| items.iter().filter_map(|i| i.get_name().ok()).collect());
+        self.close(path);
+        listed
+    }
+
     /// Whether the checkable menu item at `path` is checked.
     pub fn is_checked(&mut self, path: &[String]) -> Result<bool, String> {
         let item = self.open(path)?;

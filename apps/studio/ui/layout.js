@@ -201,7 +201,7 @@ function prettyShortcut(text) {
 // Which action an object holds: "keys", "run", "text", "resolve" or null.
 function actionKind(a) {
   if (!a) return null;
-  return ["keys", "run", "text", "resolve", "resolve_key", "solo_track", "resolve_menu"].find(k => a[k] !== undefined && a[k] !== null) || null;
+  return ["keys", "run", "text", "resolve", "resolve_key", "solo_track", "select_track", "resolve_menu"].find(k => a[k] !== undefined && a[k] !== null) || null;
 }
 
 // DaVinci Resolve commands, loaded from the app (crates/mapper/src/resolve.rs).
@@ -215,6 +215,7 @@ function describeAction(a) {
     return m ? m[1] : a.resolve_menu.split(">").pop().trim();
   }
   if (kind === "solo_track") return a.solo_track ? `Only track ${a.solo_track}` : "All tracks";
+  if (kind === "select_track") return `Select clip on track ${a.select_track}`;
   if (kind === "resolve_key") {
     const c = RESOLVE_KEY_COMMANDS.find(c => c[0] === a.resolve_key);
     return c ? c[1] : a.resolve_key;

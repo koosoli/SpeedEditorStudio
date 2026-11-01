@@ -10,12 +10,16 @@
 # The CUT page keeps DaVinci's normal controls: only keys listed there change.
 # Holding CUT (fn_key) switches the active page to its Fn layer
 # ([pages.fn_keys]) for as long as it is held; a quick tap still selects the
-# CUT page. In normal mode CUT is just the cut transition.
+# CUT page. DIS and SMTH CUT (modifier_keys) work the same way with their own
+# layers ([pages.layers.dissolve], [pages.layers.smooth_cut]). In normal mode
+# they are just the transition keys.
 #
 # Key names: see crates/speed-editor/src/keys.rs (e.g. cam1, stop_play, in).
 # Actions:   { keys = "ctrl+shift+m" }  held as long as the key is held
 #            { run = "calc.exe" }       opens a program, file or URL
 #            { text = "Hello" }         types text
+#            { solo_track = 1 }         only video + audio track 1 take part in edits (0 = all)
+#            { select_track = 1 }       selects the clip under the playhead on video track 1
 # Extras:    label = "Scene 1"          name shown on the key in the editor
 #            hold = { keys = "f14" }    long press (half a second) does this instead
 # Wheel:     { scroll = {} } or { scroll = { horizontal = true } }
@@ -25,6 +29,7 @@ version = 1
 page_keys = ["cut", "dissolve", "smooth_cut"]
 toggle_chord = ["cut", "smooth_cut"]
 fn_key = "cut"
+modifier_keys = ["dissolve", "smooth_cut"]
 
 # --- CUT: DaVinci's normal controls, plus an Fn layer ---------------------------
 # Every key keeps its normal function. Hold CUT and press another key for the
@@ -48,6 +53,10 @@ slip_source = { resolve_menu = "Timeline > Select Clips > Backward on All Tracks
 slip_dest = { resolve_menu = "Timeline > Select Clips > Forward on All Tracks", label = "Select clips forward" }
 # CUT + CAM n: only video track n + audio track n take part in the next edits
 # (Resolve's Auto Track Selector); CUT + CAM 9: all tracks again.
+# VIDEO ONLY or AUDIO ONLY pressed on their own (on DaVinci pages) light up and
+# make CUT + CAM and DIS + CAM take only the video or only the audio; press the
+# lit key again for both.
+# CUT + wheel (built in on DaVinci pages): zooms the timeline in and out.
 cam1 = { solo_track = 1, label = "Only track 1" }
 cam2 = { solo_track = 2, label = "Only track 2" }
 cam3 = { solo_track = 3, label = "Only track 3" }
@@ -57,6 +66,19 @@ cam6 = { solo_track = 6, label = "Only track 6" }
 cam7 = { solo_track = 7, label = "Only track 7" }
 cam8 = { solo_track = 8, label = "Only track 8" }
 cam9 = { solo_track = 0, label = "All tracks" }
+
+# DIS + CAM n: select the clip under the playhead on video track n, with its
+# linked sound. Keyboard only (select at playhead, then track up/down), so no
+# Resolve menu opens.
+[pages.layers.dissolve]
+cam1 = { select_track = 1, label = "Select clip on track 1" }
+cam2 = { select_track = 2, label = "Select clip on track 2" }
+cam3 = { select_track = 3, label = "Select clip on track 3" }
+cam4 = { select_track = 4, label = "Select clip on track 4" }
+cam5 = { select_track = 5, label = "Select clip on track 5" }
+cam6 = { select_track = 6, label = "Select clip on track 6" }
+cam7 = { select_track = 7, label = "Select clip on track 7" }
+cam8 = { select_track = 8, label = "Select clip on track 8" }
 
 # --- DIS: hotkeys for OBS and other apps (F13-F24 clash with nothing) ---------
 [[pages]]

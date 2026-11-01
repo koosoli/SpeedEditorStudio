@@ -245,3 +245,37 @@ presents the real device's USB descriptors. Real Speed Editor unplugged, Resolve
   and the DaVinci wheel go to Resolve unchanged; Resolve's LEDs and wheel modes come back to
   the real device. Tested by the user with the real device: works. The app must start before
   Resolve, which otherwise takes the real device first.
+
+## 2026-11-01 — Track headers, Sync Lock and selecting a clip on a track
+
+- **Resolve 21's track header:** the red track label (e.g. `V1`) is the **Auto Track Selector**
+  ("Timeline › Auto Select › Auto Select All Tracks" turned every label red). The `<|>` icon next
+  to the lock is **Sync Lock**. Neither state can be read through scripting, nor through the menu
+  (the Auto Select and Sync Lock items are plain toggles without a check mark).
+- **CUT + CAM n works:** after it only V n and A n had the red label (screenshots before and after).
+- **Sync Lock decides what else a ripple drags along.** With only V1 + A1 auto-selected, Ripple
+  Start to Playhead still changed V2 and A2 while their Sync Lock was on; with Sync Lock off on
+  the other tracks they stayed alone (found by the user). Timeline › Sync Lock only offers toggles
+  ("Enable/Disable Sync Lock V1…A8 / for All Video / All Audio / All Tracks").
+- **Selecting a clip on a track, keyboard only** (`tools/capture/resolve_select_lab.py`, V1+A1
+  auto-selected, playhead inside clips on V1, V2, A1, A2, A3): Shift+V (select at playhead) →
+  V1 + A1 (linked); Ctrl+Up → V2; Ctrl+Up at the top → V2; Ctrl+Down → V1 + A1; → A2; → A3.
+  So "select at playhead", then one track up/down at a time, reaches any track, linked audio
+  included. `Timeline.GetSelectedClips()` reads the result, which lets the app check each step.
+- **Correction: stepping goes by the selected clip, not the playhead.** "Select clip above/below"
+  (Ctrl+Up/Down) picks the clip on the next track at the *start of the selected clip*. Where clips
+  on different tracks start at different frames it lands on another clip than the one under the
+  playhead (user's timeline: A2 clip from 5329, A1 clip under the playhead from 5396 — Ctrl+Up from
+  A2 selected the previous A1 clip). With linked selection off it also does not cross from a video
+  track to an audio track (V1 → Ctrl+Down stayed on V1); audio ↔ audio works.
+- **"Select at playhead" (Shift+V) takes the clip under the playhead on the topmost auto-selected
+  track** (with V1 + A1 auto-selected: V1, plus A1 if linked selection is on). That is what
+  DIS + CAM n uses: select at playhead; if that isn't track n, auto-select only track n (or only V n
+  / A n) through the Auto Select menu and select again.
+- **Only the audio (or video) of a linked clip:** with linked selection on, "select at playhead"
+  always takes both. Switching Timeline › Linked Selection off (Ctrl+Shift+L), selecting, and
+  switching it back on **keeps the single part selected** (logged: `["A1"]` before and after), the
+  same as Alt+click. Linked selection is a timeline-wide switch: leaving it off makes linked clips
+  behave as if unlinked, so the app always switches it back on.
+- `TimelineItem.GetLinkedItems()` and `GetUniqueId()` work, so the helper reports linked parts
+  that are not selected — the sign that linked selection is off.

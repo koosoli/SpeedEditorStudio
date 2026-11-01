@@ -46,15 +46,28 @@ impl KeyLayout {
         let specs = self.commands.get(command).filter(|s| !s.is_empty()).ok_or_else(|| {
             format!("{command} has no shortcut in your Resolve keyboard layout")
         })?;
-        specs
+        // Prefer a shortcut whose key needs no extra modifier on this
+        // keyboard layout: Shift + punctuation doesn't reach Resolve
+        // (docs/FINDINGS.md), so "Ctrl++" beats "Ctrl+=" on a German keyboard.
+        let parsed: Vec<(Shortcut, bool)> = specs.iter().filter_map(|spec| parse_spec_extra(spec)).collect();
+        parsed
             .iter()
-            .find_map(|spec| parse_spec(spec))
+            .find(|(_, extra)| !extra)
+            .or(parsed.first())
+            .map(|(shortcut, _)| shortcut.clone())
             .ok_or_else(|| format!("cannot type {command}'s shortcut {:?} on this keyboard", specs[0]))
     }
 }
 
 /// Converts a Resolve shortcut such as "Ctrl+Shift+[" or "Shift+F12".
+#[cfg(test)]
 fn parse_spec(spec: &str) -> Option<Shortcut> {
+    parse_spec_extra(spec).map(|(shortcut, _)| shortcut)
+}
+
+/// Like `parse_spec`, also telling whether typing the key's character on
+/// this keyboard layout needs a modifier the shortcut doesn't name.
+fn parse_spec_extra(spec: &str) -> Option<(Shortcut, bool)> {
     // The key itself may be "+", written "Ctrl++".
     let (mods, key) = match spec.strip_suffix("++") {
         Some(rest) => (rest, "+"),
@@ -64,6 +77,7 @@ fn parse_spec(spec: &str) -> Option<Shortcut> {
         },
     };
     let mut keys = Vec::new();
+    let mut extra = false;
     for m in mods.split('+').filter(|m| !m.is_empty()) {
         keys.push(match m.to_ascii_lowercase().as_str() {
             "ctrl" | "cmd" => VK_CONTROL,
@@ -94,12 +108,13 @@ fn parse_spec(spec: &str) -> Option<Shortcut> {
             for (bit, modifier) in [(1, VK_SHIFT), (2, VK_CONTROL), (4, VK_MENU)] {
                 if state & bit != 0 && !keys.contains(&modifier) {
                     keys.push(modifier);
+                    extra = true;
                 }
             }
             keys.push(vk);
         }
     }
-    Some(Shortcut { keys })
+    Some((Shortcut { keys }, extra))
 }
 
 fn named_key(name: &str) -> Option<u16> {

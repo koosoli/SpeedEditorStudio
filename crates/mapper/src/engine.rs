@@ -12,9 +12,11 @@
 //!   behave like Resolve's transition keys: the last one pressed stays lit.
 //! * A mapped shortcut is held down exactly as long as its Speed Editor key,
 //!   and is released by the key that pressed it even if the page changed.
-//! * Fn layer: while the current page's own page key is held (CUT on the
-//!   CUT page), other keys use the page's `fn_keys`. Releasing the page key
-//!   afterwards re-selects the same page, so nothing else changes.
+//! * Modifier layers: while a modifier key is held (the `fn_key`, e.g. CUT,
+//!   or one of the `modifier_keys`, e.g. DIS and SMTH CUT), other keys use
+//!   that modifier's layer on the current page. A quick tap of a modifier
+//!   on its own still selects its page; after a long press or use as a
+//!   modifier the page stays as it is.
 //! * A key with a long-press action waits: released within `HOLD_MS` it fires
 //!   its press action (shortcuts are tapped), held longer it fires the
 //!   long-press action instead.
@@ -48,6 +50,26 @@ const FLASH_HALF_PERIOD_MS: u64 = 100;
 /// counter can never fire hundreds of shortcuts.
 const MAX_WHEEL_STEPS: i32 = 30;
 
+/// Which part of a track a track choice (Fn + CAM n) takes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum TrackScope {
+    #[default]
+    Both,
+    Video,
+    Audio,
+}
+
+impl TrackScope {
+    /// (video, audio)
+    fn parts(self) -> (bool, bool) {
+        match self {
+            TrackScope::Both => (true, true),
+            TrackScope::Video => (true, false),
+            TrackScope::Audio => (false, true),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
     /// Pages and mappings are active.
@@ -70,8 +92,12 @@ pub enum Output {
     /// Press the shortcut the user's Resolve layout has for this Resolve
     /// keyboard command (a key's native function, see `native`).
     ResolveKey(String),
-    /// Limit Resolve's edits to video + audio track n (0 = all tracks).
-    SoloTrack(u8),
+    /// Limit Resolve's edits to track n (0 = all tracks): its video track,
+    /// its audio track, or both.
+    SoloTrack { track: u8, video: bool, audio: bool },
+    /// Select the clip under the playhead on track n: its video with the
+    /// linked sound, or only the video, or only the audio.
+    SelectTrack { track: u8, video: bool, audio: bool },
     /// Click a Resolve menu item (path from the top menu).
     ResolveMenu(Vec<String>),
     /// Wheel steps, positive meaning the device's positive jog direction.
@@ -107,10 +133,9 @@ pub struct Engine {
     pending: Vec<(Key, u64, Mapping)>,
     /// Set when the toggle chord fired; cleared once all its keys are up.
     chord_latched: bool,
-    /// When the Fn key went down (custom mode), and whether another key was
-    /// pressed while it was held.
-    fn_since: Option<u64>,
-    fn_used: bool,
+    /// Modifiers held in custom mode, in the order they went down: key, when,
+    /// and whether another key was pressed while it was held.
+    modifiers_held: Vec<(Key, u64, bool)>,
     wheel_acc: i32,
     skip_next_jog: bool,
     blink_on: bool,
@@ -130,6 +155,10 @@ pub struct Engine {
     /// Track pair chosen with a `SoloTrack` action (0 = all tracks); its CAM
     /// key stays lit.
     solo_track: u8,
+    /// VIDEO ONLY / AUDIO ONLY toggled on a DaVinci page: track choices
+    /// (CUT + CAM, DIS + CAM) take only that part of the track until it is
+    /// toggled off again.
+    track_scope: TrackScope,
     /// Pass-through to an emulated Speed Editor in Resolve.
     passthrough: bool,
     /// Keys held as native keys (pass-through), and what was last sent.
@@ -152,8 +181,7 @@ impl Engine {
             active: Vec::new(),
             pending: Vec::new(),
             chord_latched: false,
-            fn_since: None,
-            fn_used: false,
+            modifiers_held: Vec::new(),
             wheel_acc: 0,
             skip_next_jog: true,
             blink_on: true,
@@ -165,6 +193,7 @@ impl Engine {
             sent_wheel: None,
             gestures: Gestures::default(),
             solo_track: 0,
+            track_scope: TrackScope::Both,
             passthrough: false,
             native_held: Vec::new(),
             sent_native: Vec::new(),
@@ -270,13 +299,20 @@ impl Engine {
         self.held = now;
         let mut out = Vec::new();
 
-        if let Some(fn_key) = self.profile.fn_key {
-            if self.fn_since.is_some() && pressed.iter().any(|&k| k != fn_key) {
-                self.fn_used = true;
+        if !pressed.is_empty() {
+            // A key pressed while a modifier is held uses that modifier; a
+            // modifier pressed that way counts as used too, so neither
+            // selects its page when released.
+            let others_held = !self.modifiers_held.is_empty();
+            for held in &mut self.modifiers_held {
+                held.2 = true;
             }
-            if self.mode == Mode::Custom && pressed.contains(&fn_key) {
-                self.fn_since = Some(self.now_ms);
-                self.fn_used = false;
+            if self.mode == Mode::Custom {
+                for &key in &pressed {
+                    if self.profile.modifiers.contains(&key) {
+                        self.modifiers_held.push((key, self.now_ms, others_held));
+                    }
+                }
             }
         }
 
@@ -293,12 +329,12 @@ impl Engine {
                 if self.chord_latched {
                     continue;
                 }
-                if Some(key) == self.profile.fn_key {
+                if let Some(i) = self.modifiers_held.iter().position(|m| m.0 == key) {
                     // Only a quick tap on its own selects the page; after a
-                    // long press or use as Fn the page stays as it is.
-                    let since = self.fn_since.take();
-                    let held_long = since.is_some_and(|s| self.now_ms.saturating_sub(s) >= HOLD_MS);
-                    if self.mode == Mode::Custom && (self.fn_used || held_long) {
+                    // long press or use as a modifier the page stays as it is.
+                    let (_, since, used) = self.modifiers_held.remove(i);
+                    let held_long = self.now_ms.saturating_sub(since) >= HOLD_MS;
+                    if self.mode == Mode::Custom && (used || held_long) {
                         continue;
                     }
                 }
@@ -342,7 +378,8 @@ impl Engine {
         }
 
         {
-            let fn_held = self.fn_held();
+            let modifier = self.active_modifier();
+            let fn_held = modifier.is_some();
             for key in pressed {
                 // With Resolve's wheel (DaVinci pages and normal mode),
                 // JOG/SHTL/SCRL switch its mode.
@@ -372,14 +409,22 @@ impl Engine {
                     continue;
                 }
                 let page = &self.profile.pages[self.page];
-                let layer = if fn_held { &page.fn_keys } else { &page.keys };
-                let Some(mapping) = layer.get(&key).cloned() else {
-                    // Uncustomised keys on a DaVinci page keep their native function.
+                let mapping = match modifier {
+                    Some(m) => page.layer(m).and_then(|layer| layer.get(&key)).cloned(),
+                    None => page.keys.get(&key).cloned(),
+                };
+                let Some(mapping) = mapping else {
+                    // Uncustomised keys on a DaVinci page keep their native
+                    // function; with the Fn key held, a few get an extra one.
                     if page.davinci_defaults {
-                        if fn_held {
-                            self.native_fn_press(key, &mut out);
-                        } else {
-                            self.native(key, &mut out);
+                        match modifier {
+                            None if matches!(key, Key::VideoOnly | Key::AudioOnly) => self.arm_track_scope(key),
+                            None => self.native(key, &mut out),
+                            Some(m) if Some(m) == self.profile.fn_key => match key {
+                                Key::VideoOnly | Key::AudioOnly => self.arm_track_scope(key),
+                                _ => self.native_fn_press(key, &mut out),
+                            },
+                            Some(_) => {}
                         }
                     }
                     continue;
@@ -449,8 +494,21 @@ impl Engine {
         }
     }
 
-    /// Runs a key's extra native gesture for while Fn is held (CUT + SPLIT).
+    /// VIDEO ONLY / AUDIO ONLY: track choices take only video or only audio
+    /// from now on. Pressing the same key again goes back to both.
+    fn arm_track_scope(&mut self, key: Key) {
+        let scope = if key == Key::VideoOnly { TrackScope::Video } else { TrackScope::Audio };
+        self.track_scope = if self.track_scope == scope { TrackScope::Both } else { scope };
+    }
+
+    /// Runs a key's extra native gesture for while Fn is held (CUT + SPLIT;
+    /// the Fn key itself zooms the timeline with the wheel).
     fn native_fn_press(&mut self, key: Key, out: &mut Vec<Output>) {
+        if Some(key) == self.profile.fn_key {
+            let spec = crate::native::NativeKey { dial: Some(crate::native::ZOOM), ..Default::default() };
+            out.extend(self.gestures.press(key, spec, self.now_ms).into_iter().map(step_output));
+            return;
+        }
         if let Some(spec) = native_fn_key(key) {
             out.extend(self.gestures.press(key, spec, self.now_ms).into_iter().map(step_output));
         }
@@ -551,6 +609,7 @@ impl Engine {
         if let Action::SoloTrack(n) = action {
             self.solo_track = *n;
         }
+        let scope = self.track_scope;
         out.push(match action {
             Action::Keys(shortcut) => Output::Tap(shortcut.clone()),
             Action::Run(target) => Output::Run(target.clone()),
@@ -559,7 +618,14 @@ impl Engine {
                 Output::Resolve { command: command.clone(), params: params.clone() }
             }
             Action::ResolveKey(command) => Output::ResolveKey(command.clone()),
-            Action::SoloTrack(n) => Output::SoloTrack(*n),
+            Action::SoloTrack(n) => {
+                let (video, audio) = scope.parts();
+                Output::SoloTrack { track: *n, video, audio }
+            }
+            Action::SelectTrack(n) => {
+                let (video, audio) = scope.parts();
+                Output::SelectTrack { track: *n, video, audio }
+            }
             Action::ResolveMenu(path) => Output::ResolveMenu(path.clone()),
         });
     }
@@ -571,7 +637,7 @@ impl Engine {
         out.extend(self.release_all());
         self.held.clear();
         self.chord_latched = false;
-        self.fn_since = None;
+        self.modifiers_held.clear();
         self.wheel_acc = 0;
         self.skip_next_jog = true;
         self.sent_leds = None;
@@ -610,27 +676,44 @@ impl Engine {
         }
     }
 
-    /// True while the Fn key is held in custom mode: other keys then use the
-    /// active page's `fn_keys`.
+    /// The modifier in effect in custom mode: the first one pressed of those
+    /// still held. Other keys then use its layer on the active page.
+    fn active_modifier(&self) -> Option<Key> {
+        if self.mode != Mode::Custom {
+            return None;
+        }
+        self.modifiers_held.iter().map(|m| m.0).find(|k| self.held.contains(k))
+    }
+
     fn fn_held(&self) -> bool {
-        self.mode == Mode::Custom && self.profile.fn_key.is_some_and(|k| self.held.contains(&k))
+        self.active_modifier().is_some()
     }
 
     fn desired_leds(&self) -> u32 {
         let led = |k: &Key| k.led().unwrap_or(0);
         let keys = &self.profile.page_keys;
         match (self.mode, self.flash_start) {
-            // While Fn is held, the Fn key and the page key light steadily.
+            // While a modifier is held, it and the page key light steadily; an
+            // armed VIDEO ONLY / AUDIO ONLY flashes.
             (Mode::Custom, _) if self.fn_held() => {
-                led(&keys[self.page]) | self.profile.fn_key.as_ref().map_or(0, led) | self.solo_led()
+                led(&keys[self.page]) | self.active_modifier().as_ref().map_or(0, led) | self.solo_led() | self.scope_led()
             }
-            (Mode::Custom, _) if self.blink_on => led(&keys[self.page]) | self.solo_led(),
-            (Mode::Custom, _) => self.solo_led(),
+            (Mode::Custom, _) if self.blink_on => led(&keys[self.page]) | self.solo_led() | self.scope_led(),
+            (Mode::Custom, _) => self.solo_led() | self.scope_led(),
             (Mode::Normal, Some(start)) => {
                 let lit = (self.now_ms.saturating_sub(start) / FLASH_HALF_PERIOD_MS) % 2 == 0;
                 if lit { keys.iter().map(led).fold(0, |a, b| a | b) } else { 0 }
             }
             (Mode::Normal, None) => led(&keys[self.normal_selected]),
+        }
+    }
+
+    /// The LED of VIDEO ONLY / AUDIO ONLY while it is toggled on.
+    fn scope_led(&self) -> u32 {
+        match self.track_scope {
+            TrackScope::Both => 0,
+            TrackScope::Video => Key::VideoOnly.led().unwrap_or(0),
+            TrackScope::Audio => Key::AudioOnly.led().unwrap_or(0),
         }
     }
 
@@ -642,7 +725,9 @@ impl Engine {
             Mode::Normal if self.flash_start.is_some() => page_keys,
             Mode::Normal => 0,
             Mode::Custom if self.profile.pages[self.page].davinci_defaults => {
-                page_keys | self.profile.fn_key.as_ref().map_or(0, led) | self.solo_led()
+                // VIDEO ONLY / AUDIO ONLY are the app's toggles on DaVinci pages.
+                let scope = led(&Key::VideoOnly) | led(&Key::AudioOnly);
+                page_keys | self.profile.fn_key.as_ref().map_or(0, led) | self.solo_led() | scope
             }
             // A page of the app's own: all LEDs are the app's.
             Mode::Custom => u32::MAX,
@@ -1045,12 +1130,12 @@ mod tests {
         let mut e = Engine::new(Profile::from_toml(SOLO_PROFILE).unwrap());
         e.on_keys(&[]);
         e.on_keys(&[CUT]);
-        assert!(has(&e.on_keys(&[CUT, Key::Cam2.code()]), &Output::SoloTrack(2)));
+        assert!(has(&e.on_keys(&[CUT, Key::Cam2.code()]), &Output::SoloTrack { track: 2, video: true, audio: true }));
         e.on_keys(&[]);
         let cam2 = Key::Cam2.led().unwrap();
         assert_eq!(e.tick(700), vec![Output::Leds(cam2)], "page LED blinks off, CAM 2 stays lit");
         e.on_keys(&[CUT]);
-        assert!(has(&e.on_keys(&[CUT, Key::Cam9.code()]), &Output::SoloTrack(0)));
+        assert!(has(&e.on_keys(&[CUT, Key::Cam9.code()]), &Output::SoloTrack { track: 0, video: true, audio: true }));
         e.on_keys(&[]);
         assert_eq!(e.solo_led(), 0, "all tracks again");
     }
@@ -1138,6 +1223,116 @@ mod tests {
         let out = e.on_keys(&[]);
         let i = out.iter().position(|o| *o == Output::NativeKeys(vec![DIS])).expect("DIS pressed on Resolve's device");
         assert!(out[i + 1..].contains(&Output::NativeKeys(vec![])), "and let go");
+    }
+
+    const MODIFIER_PROFILE: &str = r#"
+        version = 1
+        page_keys = ["cut", "dissolve", "smooth_cut"]
+        toggle_chord = ["cut", "smooth_cut"]
+        fn_key = "cut"
+        modifier_keys = ["dissolve", "smooth_cut"]
+
+        [[pages]]
+        name = "One"
+        fn_keys.cam1 = { keys = "f13" }
+        layers.dissolve.cam1 = { keys = "f14" }
+        layers.smooth_cut.cam1 = { keys = "f15" }
+
+        [[pages]]
+        name = "Two"
+
+        [[pages]]
+        name = "Three"
+    "#;
+
+    #[test]
+    fn each_modifier_has_its_own_layer() {
+        let mut e = Engine::new(Profile::from_toml(MODIFIER_PROFILE).unwrap());
+        e.on_keys(&[]);
+        e.tick(1000);
+        for (modifier, wanted) in [(CUT, "f13"), (DIS, "f14"), (SMTH, "f15")] {
+            e.on_keys(&[modifier]);
+            let out = e.on_keys(&[modifier, CAM1]);
+            assert!(has(&out, &Output::KeysDown(shortcut(wanted))), "modifier {modifier:#x}");
+            e.on_keys(&[modifier]);
+            e.on_keys(&[]);
+            assert_eq!(e.page(), 0, "using a modifier doesn't switch pages");
+        }
+    }
+
+    #[test]
+    fn a_quick_tap_of_a_modifier_still_selects_its_page() {
+        let mut e = Engine::new(Profile::from_toml(MODIFIER_PROFILE).unwrap());
+        e.on_keys(&[]);
+        e.tick(1000);
+        e.on_keys(&[DIS]);
+        e.on_keys(&[]);
+        assert_eq!(e.page(), 1);
+        // DIS pressed while CUT is held is used, so it doesn't switch pages.
+        e.on_keys(&[CUT]);
+        e.on_keys(&[CUT, DIS]);
+        e.on_keys(&[CUT]);
+        e.on_keys(&[]);
+        assert_eq!(e.page(), 1);
+    }
+
+    #[test]
+    fn modifier_layers_survive_saving() {
+        let doc = crate::profile::ProfileDoc::from_toml(MODIFIER_PROFILE).unwrap();
+        let again = crate::profile::ProfileDoc::from_toml(&doc.to_toml()).unwrap();
+        assert_eq!(doc, again);
+        assert!(doc.to_toml().contains("[pages.layers.dissolve]"));
+    }
+
+    fn davinci_fn_engine() -> Engine {
+        let text = DAVINCI_PROFILE
+            .replace("toggle_chord = [\"cut\", \"dissolve\"]", "toggle_chord = [\"cut\", \"dissolve\"]\n        fn_key = \"cut\"")
+            .replace("wheel = { davinci = {} }", "davinci_defaults = true\n        wheel = { davinci = {} }\n        fn_keys.cam1 = { solo_track = 1 }");
+        let mut e = Engine::new(Profile::from_toml(&text).unwrap());
+        e.on_keys(&[]);
+        e.tick(1000);
+        e.on_jog(0); // the report right after the wheel mode is set is skipped
+        e
+    }
+
+    #[test]
+    fn fn_key_and_wheel_zoom_the_timeline() {
+        let mut e = davinci_fn_engine();
+        e.on_keys(&[CUT]);
+        let out = e.on_jog(crate::native::DIAL_UNITS * 2);
+        assert!(has(&out, &Output::ResolveKey("viewZoomSubZoomIn".into())));
+        e.tick(1100);
+        let out = e.on_jog(-crate::native::DIAL_UNITS * 2);
+        assert!(has(&out, &Output::ResolveKey("viewZoomSubZoomOut".into())));
+        // Letting go of CUT after zooming doesn't switch pages.
+        e.on_keys(&[]);
+        assert_eq!(e.page(), 0);
+    }
+
+    #[test]
+    fn video_only_or_audio_only_narrows_the_next_track_choice() {
+        let mut e = davinci_fn_engine();
+        // A plain press of AUDIO ONLY toggles it on; it lights and isn't sent on.
+        let out = e.on_keys(&[Key::AudioOnly.code()]);
+        assert!(!out.iter().any(|o| matches!(o, Output::ResolveKey(_) | Output::NativeKeys(_))));
+        e.on_keys(&[]);
+        assert_ne!(e.desired_leds_for_test() & Key::AudioOnly.led().unwrap(), 0);
+        for _ in 0..2 {
+            e.on_keys(&[CUT]);
+            let out = e.on_keys(&[CUT, CAM1]);
+            assert!(has(&out, &Output::SoloTrack { track: 1, video: false, audio: true }), "it lasts");
+            e.on_keys(&[]);
+        }
+        // VIDEO ONLY switches over; pressing it again goes back to both.
+        e.on_keys(&[Key::VideoOnly.code()]);
+        e.on_keys(&[]);
+        e.on_keys(&[CUT]);
+        assert!(has(&e.on_keys(&[CUT, CAM1]), &Output::SoloTrack { track: 1, video: true, audio: false }));
+        e.on_keys(&[]);
+        e.on_keys(&[Key::VideoOnly.code()]);
+        e.on_keys(&[]);
+        e.on_keys(&[CUT]);
+        assert!(has(&e.on_keys(&[CUT, CAM1]), &Output::SoloTrack { track: 1, video: true, audio: true }));
     }
 
     #[test]

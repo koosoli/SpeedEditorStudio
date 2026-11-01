@@ -38,9 +38,16 @@ Resolve.**
   active page's LED blinks.
 - **Normal mode.** CUT + SMTH CUT switches every key back to its plain native function (the
   three LEDs flash to confirm). Press the chord again to return to your pages.
-- **Fn layer.** Hold CUT and press another key: each page has its own second layer.
-  Examples in the default profile: ripple start/end to playhead, trim start/end, select
-  clips forward/backward on all tracks.
+- **Modifier layers.** Hold CUT, DIS or SMTH CUT and press another key: each page has a layer
+  per modifier, and a quick tap still switches the page. Examples in the default profile:
+  CUT + IN/OUT ripple start/end to playhead, CUT + TRIM IN/OUT trim start/end, CUT + SLIP keys
+  select clips forward/backward on all tracks.
+- **Timeline zoom.** CUT + wheel zooms the timeline in and out.
+- **Select a clip by track.** DIS + CAM n selects the clip under the playhead on track n,
+  with its linked sound.
+- **Video or audio only.** VIDEO ONLY or AUDIO ONLY pressed on its own lights up and makes
+  CUT + CAM and DIS + CAM take only the video or only the audio (even of linked clips); press
+  it again for both.
 - **Track targeting.** CUT + CAM n makes only video track n + audio track n take part in
   edits, until CUT + CAM 9 turns all tracks back on. The CAM key stays lit.
 - **Move a clip frame by frame.** Hold CUT + SPLIT and turn the wheel. SPLIT + wheel on its

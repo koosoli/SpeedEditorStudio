@@ -139,6 +139,16 @@ const MOVE_FREE: Dial = Dial {
     interval_ms: DIAL_STEP_INTERVAL_MS,
     rest_ms: 0,
 };
+/// Fn key (CUT) held + wheel: zooms the timeline in (clockwise) or out.
+pub const ZOOM: Dial = Dial {
+    begin: &[],
+    forward: C("viewZoomSubZoomIn"),
+    reverse: C("viewZoomSubZoomOut"),
+    end: &[],
+    units: DIAL_UNITS * 2,
+    interval_ms: 60,
+    rest_ms: 0,
+};
 const AUDIO_LEVEL: Dial = Dial {
     begin: &[],
     forward: C("clipAudioIncreaseAudioLevel1dB"),

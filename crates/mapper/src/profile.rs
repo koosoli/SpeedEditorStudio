@@ -30,6 +30,10 @@ pub struct ProfileDoc {
     /// Page key that, when held, switches every page to its Fn layer.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fn_key: Option<String>,
+    /// More page keys that work like `fn_key` when held with another key,
+    /// each with its own layer (`[pages.layers.<key>]`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub modifier_keys: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wheel_step: Option<i32>,
     pub pages: Vec<PageDoc>,
@@ -49,6 +53,9 @@ pub struct PageDoc {
     /// Fn layer: used on this page while the profile's `fn_key` is held.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub fn_keys: BTreeMap<String, KeyDoc>,
+    /// Layers of the `modifier_keys`, by modifier: used while it is held.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub layers: BTreeMap<String, BTreeMap<String, KeyDoc>>,
 }
 
 /// One action. Exactly one field is set.
@@ -75,6 +82,10 @@ pub struct ActionDoc {
     /// Auto Track Selector); 0 switches all tracks back on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub solo_track: Option<u8>,
+    /// Selects the clip under the playhead on video track n, with its linked
+    /// audio (keyboard only, no menu).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub select_track: Option<u8>,
     /// Resolve menu item, e.g. "Trim > Ripple > Start to Playhead": clicked
     /// directly, no shortcut needed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -102,6 +113,10 @@ pub struct KeyDoc {
     pub resolve_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub solo_track: Option<u8>,
+    /// Selects the clip under the playhead on video track n, with its linked
+    /// audio (keyboard only, no menu).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub select_track: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resolve_menu: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -121,6 +136,7 @@ impl KeyDoc {
             resolve: self.resolve.clone(),
             resolve_key: self.resolve_key.clone(),
             solo_track: self.solo_track,
+            select_track: self.select_track,
             resolve_menu: self.resolve_menu.clone(),
             params: self.params.clone(),
         }
@@ -142,6 +158,9 @@ impl ActionDoc {
                 .into_iter()
                 .filter_map(|(name, value)| value.as_ref().map(|v| format!("{name} = {}", s(v))))
                 .collect();
+        if let Some(n) = self.select_track {
+            fields.push(format!("select_track = {n}"));
+        }
         if let Some(n) = self.solo_track {
             fields.push(format!("solo_track = {n}"));
         }
@@ -191,6 +210,9 @@ impl ProfileDoc {
         if let Some(fn_key) = &self.fn_key {
             let _ = writeln!(out, "fn_key = {}", s(fn_key));
         }
+        if !self.modifier_keys.is_empty() {
+            let _ = writeln!(out, "modifier_keys = [{}]", list(&self.modifier_keys));
+        }
         if let Some(step) = self.wheel_step {
             let _ = writeln!(out, "wheel_step = {step}");
         }
@@ -222,7 +244,9 @@ impl ProfileDoc {
                     let _ = writeln!(out, "wheel = {{ davinci = {{ {} }} }}", tuning.join(", "));
                 }
             }
-            for (table, keys) in [("keys", &page.keys), ("fn_keys", &page.fn_keys)] {
+            let mut tables = vec![("keys".to_string(), &page.keys), ("fn_keys".to_string(), &page.fn_keys)];
+            tables.extend(page.layers.iter().map(|(modifier, keys)| (format!("layers.{modifier}"), keys)));
+            for (table, keys) in tables {
                 if keys.is_empty() {
                     continue;
                 }
@@ -285,6 +309,9 @@ pub enum Action {
     /// Only video track n + audio track n take part in Resolve's next edits
     /// (0 = all tracks again).
     SoloTrack(u8),
+    /// Selects the clip under the playhead on video track n (with its linked
+    /// audio).
+    SelectTrack(u8),
     /// Clicks a Resolve menu item (path from the top menu).
     ResolveMenu(Vec<String>),
 }
@@ -316,9 +343,17 @@ pub struct Page {
     /// Keys without a mapping keep their native DaVinci Resolve function.
     pub davinci_defaults: bool,
     pub keys: HashMap<Key, Mapping>,
-    /// Fn layer, used while the profile's `fn_key` is held.
-    pub fn_keys: HashMap<Key, Mapping>,
+    /// Layers used while a modifier (the `fn_key` or a `modifier_keys` key)
+    /// is held, by modifier.
+    pub layers: HashMap<Key, HashMap<Key, Mapping>>,
     pub wheel: Option<Wheel>,
+}
+
+impl Page {
+    /// The layer of `modifier` (empty if the page has none).
+    pub fn layer(&self, modifier: Key) -> Option<&HashMap<Key, Mapping>> {
+        self.layers.get(&modifier)
+    }
 }
 
 /// A validated profile.
@@ -331,6 +366,9 @@ pub struct Profile {
     pub toggle_chord: Vec<Key>,
     /// Held, it switches the active page to its Fn layer.
     pub fn_key: Option<Key>,
+    /// Every key that is a modifier when held with another key: the
+    /// `fn_key` first, then the `modifier_keys`.
+    pub modifiers: Vec<Key>,
     pub wheel_step: i32,
 }
 
@@ -363,9 +401,10 @@ fn action(doc: &ActionDoc, place: &str) -> Result<Option<Action>, ProfileError> 
         .iter()
         .filter(|v| v.is_some())
         .count()
-        + usize::from(doc.solo_track.is_some());
+        + usize::from(doc.solo_track.is_some())
+        + usize::from(doc.select_track.is_some());
     if set > 1 {
-        return err(format!("{place}: choose one of keys, run, text, resolve, resolve_key, resolve_menu or solo_track"));
+        return err(format!("{place}: choose one of keys, run, text, resolve, resolve_key, resolve_menu, solo_track or select_track"));
     }
     if let Some(menu) = &doc.resolve_menu {
         let path: Vec<String> = menu.split('>').map(|p| p.trim().to_string()).filter(|p| !p.is_empty()).collect();
@@ -373,6 +412,12 @@ fn action(doc: &ActionDoc, place: &str) -> Result<Option<Action>, ProfileError> 
             return err(format!("{place}: a Resolve menu item needs a menu and an item, e.g. \"Edit > Undo\""));
         }
         return Ok(Some(Action::ResolveMenu(path)));
+    }
+    if let Some(n) = doc.select_track {
+        if !(1..=8).contains(&n) {
+            return err(format!("{place}: select_track must be 1-8"));
+        }
+        return Ok(Some(Action::SelectTrack(n)));
     }
     if let Some(n) = doc.solo_track {
         if n > 8 {
@@ -444,13 +489,36 @@ impl Profile {
         if let Some(k) = fn_key.filter(|k| !page_keys.contains(k)) {
             return err(format!("fn_key {:?} must be a page key", k.id()));
         }
+        let mut modifiers: Vec<Key> = fn_key.into_iter().collect();
+        for id in &file.modifier_keys {
+            let k = key(id)?;
+            if !page_keys.contains(&k) {
+                return err(format!("modifier key {id:?} must be a page key"));
+            }
+            if !modifiers.contains(&k) {
+                modifiers.push(k);
+            }
+        }
 
         let pages = file
             .pages
             .iter()
             .map(|page| {
                 let keys = mappings(&page.keys, &page_keys, &format!("page {:?}", page.name))?;
-                let fn_keys = mappings(&page.fn_keys, &page_keys, &format!("page {:?} Fn layer", page.name))?;
+                let mut layers = HashMap::new();
+                if let Some(fn_key) = fn_key {
+                    layers.insert(fn_key, mappings(&page.fn_keys, &page_keys, &format!("page {:?} Fn layer", page.name))?);
+                } else if !page.fn_keys.is_empty() {
+                    return err(format!("page {:?} has an Fn layer but the profile has no fn_key", page.name));
+                }
+                for (id, table) in &page.layers {
+                    let modifier = key(id)?;
+                    if !modifiers.contains(&modifier) || Some(modifier) == fn_key {
+                        return err(format!("page {:?}: layer {id:?} needs {id:?} in modifier_keys", page.name));
+                    }
+                    let place = format!("page {:?} layer {id:?}", page.name);
+                    layers.insert(modifier, mappings(table, &page_keys, &place)?);
+                }
                 let wheel = match &page.wheel {
                     None => None,
                     Some(WheelDoc::Keys { left, right }) => {
@@ -474,7 +542,7 @@ impl Profile {
                         Some(Wheel::Davinci(config))
                     }
                 };
-                Ok(Page { name: page.name.clone(), davinci_defaults: page.davinci_defaults, keys, fn_keys, wheel })
+                Ok(Page { name: page.name.clone(), davinci_defaults: page.davinci_defaults, keys, layers, wheel })
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -483,7 +551,7 @@ impl Profile {
             return err("wheel_step must be positive");
         }
 
-        Ok(Profile { pages, page_keys, toggle_chord, fn_key, wheel_step })
+        Ok(Profile { pages, page_keys, toggle_chord, fn_key, modifiers, wheel_step })
     }
 }
 

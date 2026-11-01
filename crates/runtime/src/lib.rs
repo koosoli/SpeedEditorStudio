@@ -34,6 +34,8 @@ const PACE_POLL: Duration = Duration::from_millis(2);
 const RETRY: Duration = Duration::from_secs(1);
 /// How often the user's Resolve keyboard layout is read again.
 const LAYOUT_REFRESH: Duration = Duration::from_secs(300);
+/// How long to wait for Resolve to apply a selection key.
+const SELECT_TRACK_SETTLE: Duration = Duration::from_millis(600);
 /// How often to check whether DaVinci Resolve runs.
 const RESOLVE_CHECK: Duration = Duration::from_millis(500);
 
@@ -432,32 +434,179 @@ impl<F: Fn(Event)> Loop<F> {
         Ok(())
     }
 
-    /// Lets only video track n and audio track n take part in Resolve's edits
-    /// (n = 0: all tracks) through Resolve's Timeline › Auto Select menu, which
-    /// has absolute "all on / all off" items, so no state needs remembering.
-    fn solo_track(&mut self, n: u8) {
+    /// Lets only track n take part in Resolve's edits — its video track, its
+    /// audio track or both — (n = 0: all tracks) through Resolve's Timeline ›
+    /// Auto Select menu, which has absolute "all on / all off" items, so no
+    /// state needs remembering.
+    fn solo_track(&mut self, n: u8, video: bool, audio: bool) {
         let auto = |item: &str| vec!["Timeline".to_string(), "Auto Select".to_string(), item.to_string()];
-        let steps = if n == 0 {
-            vec![auto("Auto Select All Tracks")]
+        let mut steps = Vec::new();
+        if n == 0 {
+            steps.push(auto("Auto Select All Tracks"));
         } else {
-            vec![
-                auto("Auto Deselect All Tracks"),
-                auto(&format!("Auto Select/Deselect V{n}")),
-                auto(&format!("Auto Select/Deselect A{n}")),
-            ]
-        };
+            steps.push(auto("Auto Deselect All Tracks"));
+            if video {
+                steps.push(auto(&format!("Auto Select/Deselect V{n}")));
+            }
+            if audio {
+                steps.push(auto(&format!("Auto Select/Deselect A{n}")));
+            }
+        }
         for path in steps {
             if let Err(e) = self.run_menu(&path) {
                 (self.on_event)(Event::Status(format!("Resolve: {e}")));
                 return;
             }
         }
-        let text = if n == 0 {
-            "all tracks take part in edits again".to_string()
-        } else {
-            format!("only V{n} + A{n} take part in edits now")
+        let text = match (n, video, audio) {
+            (0, ..) => "all tracks take part in edits again".to_string(),
+            (_, true, false) => format!("only V{n} takes part in edits now"),
+            (_, false, true) => format!("only A{n} takes part in edits now"),
+            _ => format!("only V{n} + A{n} take part in edits now"),
         };
         (self.on_event)(Event::Status(text));
+    }
+
+    /// Selects the clip under the playhead on track n — its video with the
+    /// linked sound, only its video, or only its audio (docs/FINDINGS.md,
+    /// "Selecting a clip on a track"). "Select at playhead" takes the clip
+    /// under the playhead on the topmost auto-selected track, so when that
+    /// isn't track n already, track n becomes the auto-selected one first (a
+    /// Resolve menu, like CUT + CAM). Stepping the selection to other tracks
+    /// is not used: it goes by the selected clip's start, not the playhead.
+    fn select_track(&mut self, n: u8, video: bool, audio: bool) {
+        let wanted = format!("{}{n}", if video { 'V' } else { 'A' });
+        let mut unlinked = false;
+        let result = self.select_at_playhead_on(n, video, audio, &wanted, &mut unlinked);
+        if unlinked {
+            // Always switch linked selection back on: it is a project-wide
+            // setting the user expects to stay as it was.
+            let _ = self.press_resolve_command("editLinkedSelection");
+            let after = self.read_selection().map(|(t, _)| t).unwrap_or_default();
+            thread::sleep(Duration::from_millis(250));
+            let later = self.read_selection().map(|(t, _)| t).unwrap_or_default();
+            self.debug(format_args!("select {wanted}: linked selection back on, selection {after:?} then {later:?}"));
+        }
+        let text = match result {
+            Ok(()) => format!("selected the clip on {wanted}"),
+            Err(e) => {
+                self.debug(format_args!("select {wanted} failed: {e}"));
+                e
+            }
+        };
+        (self.on_event)(Event::Status(text));
+    }
+
+    fn select_at_playhead_on(
+        &mut self,
+        n: u8,
+        video: bool,
+        audio: bool,
+        wanted: &str,
+        unlinked: &mut bool,
+    ) -> Result<(), String> {
+        let resolve_err = |e: String| format!("Resolve: {e}");
+        let unreadable = || "Resolve: could not read the selection (is scripting set to Local?)".to_string();
+        let only = !(video && audio);
+        let fits = |t: &[String]| t.iter().any(|x| x == wanted) && (!only || t.len() == 1);
+        let linked = |t: &[String]| t.iter().any(|x| x.starts_with('V')) && t.iter().any(|x| x.starts_with('A'));
+
+        // Quick path: the target may already be the topmost auto-selected track.
+        let mut tracks = self.reselect_at_playhead().ok_or_else(unreadable)?;
+        if fits(&tracks) && !(!only && self.linked_part_unselected()) {
+            return Ok(());
+        }
+        if only && linked(&tracks) {
+            // Linked selection is on: switch it off and select again.
+            self.debug(format_args!("select {wanted}: {tracks:?} is linked, switching linked selection off"));
+            self.press_resolve_command("editLinkedSelection").map_err(resolve_err)?;
+            *unlinked = true;
+            tracks = self.reselect_at_playhead().ok_or_else(unreadable)?;
+            if fits(&tracks) {
+                return Ok(());
+            }
+        }
+        if !fits(&tracks) {
+            // "Select at playhead" takes the topmost auto-selected track: make
+            // that track n (or only its video / its audio) and select again.
+            self.debug(format_args!("select {wanted}: got {tracks:?}, auto-selecting track {n}"));
+            self.solo_track(n, video, audio);
+            tracks = self.reselect_at_playhead().ok_or_else(unreadable)?;
+            if fits(&tracks) && !(!only && self.linked_part_unselected()) {
+                return Ok(());
+            }
+        }
+        if !only && tracks.iter().any(|x| x == wanted) && self.linked_part_unselected() {
+            // Video and sound together, but linked selection is off: switch
+            // it on and select again.
+            self.debug(format_args!("select {wanted}: linked part not selected, switching linked selection on"));
+            self.press_resolve_command("editLinkedSelection").map_err(resolve_err)?;
+            tracks = self.reselect_at_playhead().ok_or_else(unreadable)?;
+            if fits(&tracks) {
+                return Ok(());
+            }
+        }
+        self.debug(format_args!("select {wanted}: ended with {tracks:?}"));
+        Err(format!("no clip under the playhead on {wanted}"))
+    }
+
+    /// Deselects everything and selects at the playhead; returns the tracks
+    /// selected under the playhead once Resolve shows the new selection.
+    fn reselect_at_playhead(&mut self) -> Option<Vec<String>> {
+        let before = self.read_selection()?.0;
+        self.press_resolve_command("editDeselectAll").ok()?;
+        self.press_resolve_command("editSelectItemAtPlayhead").ok()?;
+        self.wait_for_selection(&before).map(|(t, _)| t)
+    }
+
+    /// Whether a selected clip has a linked part that isn't selected, i.e.
+    /// Resolve's linked selection is off.
+    fn linked_part_unselected(&mut self) -> bool {
+        let Ok(reply) = self.resolve.request("selection", &Default::default(), Duration::from_secs(2)) else {
+            return false;
+        };
+        serde_json::from_str::<serde_json::Value>(&reply)
+            .ok()
+            .and_then(|v| v["unselected_links"].as_array().map(|a| !a.is_empty()))
+            .unwrap_or(false)
+    }
+
+    /// The tracks selected under the playhead, and the number of video tracks.
+    /// Resolve sometimes refuses the query right after a selection change;
+    /// it is asked again a few times.
+    fn read_selection(&mut self) -> Option<(Vec<String>, usize)> {
+        let mut reply = Err(String::new());
+        for attempt in 0..4 {
+            reply = self.resolve.request("selection", &Default::default(), Duration::from_secs(2));
+            match &reply {
+                Ok(_) => break,
+                Err(e) => {
+                    self.debug(format_args!("reading the selection failed (attempt {}): {e}", attempt + 1));
+                    thread::sleep(Duration::from_millis(80));
+                }
+            }
+        }
+        let value: serde_json::Value = serde_json::from_str(&reply.ok()?).ok()?;
+        let tracks = value["tracks"].as_array()?.iter().filter_map(|t| t.as_str().map(str::to_owned)).collect();
+        Some((tracks, value["video_tracks"].as_u64().unwrap_or(0) as usize))
+    }
+
+    /// Asks the helper for the selected tracks until they differ from
+    /// `previous` or a short time has passed (Resolve applies keys
+    /// asynchronously).
+    fn wait_for_selection(&mut self, previous: &[String]) -> Option<(Vec<String>, usize)> {
+        let start = Instant::now();
+        loop {
+            let (tracks, video) = self.read_selection()?;
+            // An empty selection is usually a moment between "deselect" and
+            // "select" taking effect, not the result.
+            let changed = tracks != previous && !tracks.is_empty();
+            if changed || start.elapsed() >= SELECT_TRACK_SETTLE {
+                self.debug(format_args!("selection: {tracks:?}"));
+                return Some((tracks, video));
+            }
+            thread::sleep(Duration::from_millis(30));
+        }
     }
 
     /// Clicks a Resolve menu item, starting the menu engine on first use.
@@ -588,7 +737,8 @@ impl<F: Fn(Event)> Loop<F> {
                         (self.on_event)(Event::Status(format!("Resolve: {e}")));
                     }
                 }
-                Output::SoloTrack(n) => self.solo_track(n),
+                Output::SoloTrack { track, video, audio } => self.solo_track(track, video, audio),
+                Output::SelectTrack { track, video, audio } => self.select_track(track, video, audio),
                 Output::ResolveMenu(path) => {
                     if let Err(e) = self.run_menu(&path) {
                         (self.on_event)(Event::Status(format!("Resolve: {e}")));

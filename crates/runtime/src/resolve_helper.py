@@ -128,6 +128,26 @@ class Bridge:
 
     # ---------------------------------------------------------- commands
 
+    def cmd_selection(self, p):
+        # Tracks of the selected timeline items, e.g. ["A1", "V1"], and the
+        # number of video tracks, for stepping the selection to a track.
+        # Only items under the playhead count; others are listed apart.
+        timeline = self.timeline()
+        frame, _, _ = self.playhead(timeline)
+        items = timeline.GetSelectedClips() or []
+        items = list(items.values()) if isinstance(items, dict) else list(items)
+        name = lambda i: "{}{}".format(i.GetTrackTypeAndIndex()[0][0].upper(), i.GetTrackTypeAndIndex()[1])
+        under = sorted({name(i) for i in items if i.GetStart() <= frame < i.GetEnd()})
+        elsewhere = sorted({name(i) for i in items if not (i.GetStart() <= frame < i.GetEnd())})
+        # Linked parts of selected clips that are not selected themselves:
+        # then Resolve's linked selection is off.
+        selected_ids = {i.GetUniqueId() for i in items}
+        unselected_links = sorted({
+            name(l) for i in items for l in (i.GetLinkedItems() or []) if l.GetUniqueId() not in selected_ids
+        })
+        return json.dumps({"tracks": under, "elsewhere": elsewhere, "unselected_links": unselected_links,
+                           "video_tracks": timeline.GetTrackCount("video")})
+
     def cmd_playhead(self, p):
         # The playhead as a frame number, so the app can pace wheel steps.
         frame, _, _ = self.playhead(self.timeline())
