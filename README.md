@@ -3,6 +3,20 @@
 Your own key bindings for the Blackmagic **DaVinci Resolve Speed Editor**, working inside DaVinci
 Resolve, while every key and the jog wheel keep their native behaviour.
 
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/koosoli)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/koosoli)
+
+> [!TIP]
+> **Don't want to compile? A ready-to-use Windows build is waiting for you.**
+> Supporters get access to our private builds repository,
+> [SpeedEditorStudio-Builds](https://github.com/SpeedEditorStudio/SpeedEditorStudio-Builds/releases),
+> with tested, ready-to-run releases. Become a member through
+> [GitHub Sponsors](https://github.com/sponsors/koosoli) for a humble monthly contribution, or
+> support the project once through [Buy Me a Coffee](https://buymeacoffee.com/koosoli) and
+> leave your GitHub username, and you'll be added. Either way you directly fund the
+> project's development, testing and build distribution. Building from source stays free,
+> and your rights under the license are the same either way.
+
 ![Speed Editor Studio](docs/images/studio.png)
 
 DaVinci Resolve opens the Speed Editor exclusively, so other tools can't add anything to it

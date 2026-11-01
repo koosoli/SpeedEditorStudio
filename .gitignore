@@ -4,3 +4,4 @@ __pycache__/
 /.claude/
 # Raw USB captures record the whole bus (other devices too); only decoded logs are kept.
 *.pcap
+/dist/
