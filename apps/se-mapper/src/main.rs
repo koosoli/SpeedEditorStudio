@@ -50,7 +50,7 @@ fn main() -> ExitCode {
     }
 
     println!("profile {path} loaded. Ctrl+C to quit. DaVinci Resolve must be closed.");
-    let options = Options { active: true, yield_to_resolve: false };
+    let options = Options { active: true, yield_to_resolve: false, pass_through: true };
     let runtime = Runtime::spawn(profile, options, |event| match event {
         Event::YieldedToResolve => println!("DaVinci Resolve is running: the Speed Editor is left to it"),
         Event::Waiting(why) => println!("waiting for the Speed Editor ({why})"),

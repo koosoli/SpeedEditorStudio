@@ -189,7 +189,7 @@ fn connect(
     if let Some(old) = slot.take() {
         old.stop();
     }
-    *slot = Some(Runtime::spawn(profile, Options { active, yield_to_resolve }, move |event| {
+    *slot = Some(Runtime::spawn(profile, Options { active, yield_to_resolve, pass_through: true }, move |event| {
         let _ = app.emit("runtime", UiEvent::from(event));
     }));
     Ok(())

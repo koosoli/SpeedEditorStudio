@@ -200,3 +200,48 @@ Never run `se-probe control` while Resolve is open: it re-authenticates and chan
 - **RIPL DEL** deletes the clip under the playhead: `editSelectItemAtPlayhead`, then `editDelete`.
 - Debug log: set `OPEN_SPEED_EDITOR_LOG` to a file path before starting the app to log every wheel
   report and output.
+
+## 2026-11-01 — Which device interface Resolve opens
+
+Established by listing Resolve.exe's open file handles (NtQuerySystemInformation + NtQueryObject,
+read-only) while Resolve owned the Speed Editor over USB, and mapping the device object to its
+PnP node (`DEVPKEY_Device_PDOName`).
+
+- Resolve holds exactly one handle to the Speed Editor: `\Device\0000008d` =
+  `HID\VID_1EDB&PID_DA0E&MI_02\…`, the plain HID interface (vendor usage page `ff00`), opened
+  read/write (access `0x12019f`).
+- Resolve does **not** open `MI_00` (Blackmagic's `DaVinciKeyboards` driver).
+- So Resolve talks to the Speed Editor as an ordinary HID device. An emulated HID device with the
+  same VID/PID and report descriptor is a realistic way to hand native key presses to Resolve
+  unchanged. As the device side, an emulator can accept any authentication answer from the host.
+
+## 2026-11-01 — Emulated Speed Editor: Resolve accepts it and runs native functions
+
+Set-up: usbip-win2 0.9.8.1 (Microsoft-signed drivers) plus `tools/se-emu`, a USB/IP server that
+presents the real device's USB descriptors. Real Speed Editor unplugged, Resolve 21.1 running.
+
+- **What Resolve does when it adds a Speed Editor** (USBPcap, real device plugged in):
+  SET_IDLE; GET feature 1 (`01 4d 02 25 7b 01 05 02`: software version, firmware 1.5.2);
+  GET feature 8 (serial number, 32 ASCII bytes); output reports 3 (wheel mode), 4 (wheel LEDs),
+  2 (key LEDs); the authentication on feature report 6; GET input report 7 (battery, `07 01 63`).
+- **The report descriptor must be the device's own** (308 bytes, now in
+  `crates/speed-editor/src/emulator.rs`). The one hidapi rebuilds on Windows (299 bytes) drops
+  feature reports 1 and 8, so Resolve's version and serial reads fail inside Windows and Resolve
+  logs "Failed to add device." (`davinci_resolve.log`, component SyManager).
+- With the original descriptor and answers for reports 1, 8 and 7, Resolve logs
+  **"Keyboard connected."**, sets wheel mode and LEDs, and reads the battery.
+- **Resolve checks the device's answer to its challenge.** It is not `auth::response()` of the
+  challenge (3 captured pairs, none match simple variants). With an all-zero answer Resolve retries
+  the handshake 10 times, then **accepts the device anyway**.
+- **Native functions work:** IN sent from the emulator set an in-point at the playhead (frame 3992,
+  checked through scripting); STOP/PLAY started and stopped playback.
+- Windows needed no restart after installing usbip-win2.
+- Captured handshakes (host challenge → device answer, device's own challenge), little-endian u64:
+  `b3b7b10bdb52eaf8 → 134810687129fb41` (7732a06f1cc3148c),
+  `ac1b902b86739fcb → 2101e5b33e9001e9` (4b2760d006451e3c),
+  `27c1f347ce0a5fd4 → 1fd49dddfc12bb61` (6287c6d1400df5e0).
+- **Pass-through in the app (2026-11-01):** Speed Editor Studio holds the real device, runs the
+  emulator (`crates/speed-editor/src/emulator.rs`) and attaches it with usbip-win2. Native keys
+  and the DaVinci wheel go to Resolve unchanged; Resolve's LEDs and wheel modes come back to
+  the real device. Tested by the user with the real device: works. The app must start before
+  Resolve, which otherwise takes the real device first.

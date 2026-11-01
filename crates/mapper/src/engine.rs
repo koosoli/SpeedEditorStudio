@@ -18,6 +18,11 @@
 //! * A key with a long-press action waits: released within `HOLD_MS` it fires
 //!   its press action (shortcuts are tapped), held longer it fires the
 //!   long-press action instead.
+//! * Pass-through (`set_passthrough`): with an emulated Speed Editor attached
+//!   to Resolve, keys doing their native job and the DaVinci wheel are handed
+//!   to Resolve unchanged (`NativeKeys`, `NativeJog`) instead of being
+//!   imitated with shortcuts. Resolve's LEDs and wheel mode come back through
+//!   `set_resolve_*`; the app keeps its own LEDs (page keys, Fn, solo CAM).
 
 use std::collections::BTreeMap;
 
@@ -81,6 +86,11 @@ pub enum Output {
     JogMode(u8),
     /// New bitfield for the JOG/SHTL/SCRL LEDs.
     JogLeds(u8),
+    /// Pass-through: the keys Resolve's emulated Speed Editor now shows as
+    /// held (key codes).
+    NativeKeys(Vec<u16>),
+    /// Pass-through: hand the wheel report just received to Resolve.
+    NativeJog,
     /// Human-readable state change, for the log or a status display.
     Status(String),
 }
@@ -120,6 +130,16 @@ pub struct Engine {
     /// Track pair chosen with a `SoloTrack` action (0 = all tracks); its CAM
     /// key stays lit.
     solo_track: u8,
+    /// Pass-through to an emulated Speed Editor in Resolve.
+    passthrough: bool,
+    /// Keys held as native keys (pass-through), and what was last sent.
+    native_held: Vec<Key>,
+    sent_native: Vec<Key>,
+    /// What Resolve last set on the emulated device: key LEDs, wheel mode,
+    /// wheel LEDs.
+    resolve_leds: u32,
+    resolve_jog_mode: Option<u8>,
+    resolve_jog_leds: Option<u8>,
 }
 
 impl Engine {
@@ -145,6 +165,87 @@ impl Engine {
             sent_wheel: None,
             gestures: Gestures::default(),
             solo_track: 0,
+            passthrough: false,
+            native_held: Vec::new(),
+            sent_native: Vec::new(),
+            resolve_leds: 0,
+            resolve_jog_mode: None,
+            resolve_jog_leds: None,
+        }
+    }
+
+    /// Turns pass-through to Resolve's emulated Speed Editor on or off.
+    pub fn set_passthrough(&mut self, on: bool) -> Vec<Output> {
+        let mut out = Vec::new();
+        if on == self.passthrough {
+            return out;
+        }
+        out.extend(self.release_davinci());
+        self.passthrough = on;
+        self.native_held.clear();
+        self.push_native(&mut out);
+        if !on {
+            self.resolve_jog_mode = None;
+            self.resolve_jog_leds = None;
+            self.resolve_leds = 0;
+        }
+        self.sent_leds = None;
+        self.sent_wheel = None;
+        self.push_leds(&mut out);
+        self.push_wheel(&mut out);
+        out
+    }
+
+    pub fn passthrough(&self) -> bool {
+        self.passthrough
+    }
+
+    /// Resolve set the key LEDs of its emulated Speed Editor.
+    pub fn set_resolve_leds(&mut self, leds: u32) -> Vec<Output> {
+        self.resolve_leds = leds;
+        let mut out = Vec::new();
+        self.push_leds(&mut out);
+        out
+    }
+
+    /// Resolve set the wheel mode of its emulated Speed Editor.
+    pub fn set_resolve_jog_mode(&mut self, mode: u8) -> Vec<Output> {
+        self.resolve_jog_mode = Some(mode);
+        let mut out = Vec::new();
+        self.push_wheel(&mut out);
+        out
+    }
+
+    /// Resolve set the JOG/SHTL/SCRL LEDs of its emulated Speed Editor.
+    pub fn set_resolve_jog_leds(&mut self, leds: u8) -> Vec<Output> {
+        self.resolve_jog_leds = Some(leds);
+        let mut out = Vec::new();
+        self.push_wheel(&mut out);
+        out
+    }
+
+    /// True when the wheel goes straight to Resolve (pass-through with the
+    /// DaVinci wheel).
+    fn wheel_native(&self) -> bool {
+        self.passthrough && self.davinci_config().is_some()
+    }
+
+    /// A key doing its native job: handed to Resolve in pass-through,
+    /// imitated with Resolve's shortcuts otherwise.
+    fn native(&mut self, key: Key, out: &mut Vec<Output>) {
+        if self.passthrough {
+            if !self.native_held.contains(&key) {
+                self.native_held.push(key);
+            }
+        } else {
+            self.native_press(key, out);
+        }
+    }
+
+    fn push_native(&mut self, out: &mut Vec<Output>) {
+        if self.sent_native != self.native_held {
+            self.sent_native = self.native_held.clone();
+            out.push(Output::NativeKeys(self.native_held.iter().map(|k| k.code()).collect()));
         }
     }
 
@@ -186,6 +287,7 @@ impl Engine {
         }
 
         for key in released {
+            self.native_held.retain(|&k| k != key);
             out.extend(self.gestures.release(key).into_iter().map(step_output));
             if let Some(index) = self.profile.page_keys.iter().position(|&k| k == key) {
                 if self.chord_latched {
@@ -211,8 +313,14 @@ impl Engine {
                     Mode::Normal => {
                         self.normal_selected = index;
                         self.flash_start = None;
-                        // The transition keys also do their native job.
-                        if let Some(spec) = native_key(key) {
+                        // The transition keys also do their native job,
+                        // pressed on release so the toggle chord stays apart.
+                        if self.passthrough {
+                            let mut tapped = self.native_held.clone();
+                            tapped.push(key);
+                            out.push(Output::NativeKeys(tapped.iter().map(|k| k.code()).collect()));
+                            self.sent_native = tapped;
+                        } else if let Some(spec) = native_key(key) {
                             out.extend(spec.press.iter().map(|s| step_output(*s)));
                         }
                     }
@@ -246,15 +354,20 @@ impl Engine {
                         _ => None,
                     };
                     if let Some(mode) = mode {
-                        out.extend(self.davinci.set_mode(mode, &config));
-                        self.skip_next_jog = true;
+                        if self.passthrough {
+                            // Resolve switches the mode and tells us.
+                            self.native(key, &mut out);
+                        } else {
+                            out.extend(self.davinci.set_mode(mode, &config));
+                            self.skip_next_jog = true;
+                        }
                         continue;
                     }
                 }
                 if self.mode == Mode::Normal {
                     // Normal mode: every key does its native Resolve function.
                     if !self.profile.page_keys.contains(&key) {
-                        self.native_press(key, &mut out);
+                        self.native(key, &mut out);
                     }
                     continue;
                 }
@@ -266,7 +379,7 @@ impl Engine {
                         if fn_held {
                             self.native_fn_press(key, &mut out);
                         } else {
-                            self.native_press(key, &mut out);
+                            self.native(key, &mut out);
                         }
                     }
                     continue;
@@ -279,6 +392,9 @@ impl Engine {
             }
         }
 
+        // Released keys leave the emulated device too (and a normal-mode
+        // transition tap above is let go here).
+        self.push_native(&mut out);
         self.push_leds(&mut out);
         self.push_wheel(&mut out);
         out
@@ -294,6 +410,9 @@ impl Engine {
         if self.gestures.owns_wheel() {
             let absolute = self.davinci_config().is_some() && self.davinci.mode() == WheelMode::Shuttle;
             return self.gestures.wheel(value, absolute, self.now_ms).into_iter().map(step_output).collect();
+        }
+        if self.wheel_native() {
+            return vec![Output::NativeJog];
         }
         if let Some(config) = self.davinci_config() {
             return self.davinci.on_report(value, self.now_ms, &config);
@@ -361,7 +480,15 @@ impl Engine {
     /// Jog mode and jog LEDs the device should have now: Resolve's setup on a
     /// page with its wheel, plain relative movement and no LEDs otherwise.
     fn desired_wheel(&self) -> (u8, u8) {
-        if self.davinci_config().is_some() { self.davinci.setup() } else { (0, 0) }
+        if self.wheel_native() {
+            // Whatever Resolve set on its emulated device.
+            let (mode, leds) = self.davinci.setup();
+            (self.resolve_jog_mode.unwrap_or(mode), self.resolve_jog_leds.unwrap_or(leds))
+        } else if self.davinci_config().is_some() {
+            self.davinci.setup()
+        } else {
+            (0, 0)
+        }
     }
 
     fn push_wheel(&mut self, out: &mut Vec<Output>) {
@@ -393,7 +520,7 @@ impl Engine {
                 self.fire_held(key, action, &mut out);
             }
         }
-        if let Some(config) = self.davinci_config() {
+        if let (false, Some(config)) = (self.wheel_native(), self.davinci_config()) {
             out.extend(self.davinci.tick(now_ms, &config));
         }
         self.push_leds(&mut out);
@@ -450,6 +577,8 @@ impl Engine {
         self.sent_leds = None;
         self.sent_wheel = None;
         self.gestures.reset();
+        self.native_held.clear();
+        self.push_native(&mut out);
         out
     }
 
@@ -505,8 +634,35 @@ impl Engine {
         }
     }
 
+    /// LEDs the app controls in pass-through; Resolve sets the rest.
+    fn app_led_mask(&self) -> u32 {
+        let led = |k: &Key| k.led().unwrap_or(0);
+        let page_keys = self.profile.page_keys.iter().map(led).fold(0, |a, b| a | b);
+        match self.mode {
+            Mode::Normal if self.flash_start.is_some() => page_keys,
+            Mode::Normal => 0,
+            Mode::Custom if self.profile.pages[self.page].davinci_defaults => {
+                page_keys | self.profile.fn_key.as_ref().map_or(0, led) | self.solo_led()
+            }
+            // A page of the app's own: all LEDs are the app's.
+            Mode::Custom => u32::MAX,
+        }
+    }
+
+    #[cfg(test)]
+    fn desired_leds_for_test(&mut self) -> u32 {
+        let mut out = Vec::new();
+        self.sent_leds = None;
+        self.push_leds(&mut out);
+        self.sent_leds.unwrap()
+    }
+
     fn push_leds(&mut self, out: &mut Vec<Output>) {
-        let leds = self.desired_leds();
+        let mut leds = self.desired_leds();
+        if self.passthrough {
+            let mask = self.app_led_mask();
+            leds = (self.resolve_leds & !mask) | (leds & mask);
+        }
         if self.sent_leds != Some(leds) {
             self.sent_leds = Some(leds);
             out.push(Output::Leds(leds));
@@ -916,6 +1072,72 @@ mod tests {
         assert!(has(&out, &Output::ResolveKey("editSelectItemAtPlayhead".into())));
         assert!(has(&out, &Output::ResolveKey("editNudgeTrimStepNudgeForward".into())), "moves, not swaps");
         assert!(!out.iter().any(|o| matches!(o, Output::ResolveMenu(_))), "no swap menu");
+    }
+
+    fn passthrough_engine() -> Engine {
+        let text = DAVINCI_PROFILE
+            .replace("toggle_chord = [\"cut\", \"dissolve\"]", "toggle_chord = [\"cut\", \"dissolve\"]\n        fn_key = \"cut\"")
+            .replace("wheel = { davinci = {} }", "davinci_defaults = true\n        wheel = { davinci = {} }\n        keys.out = { keys = \"f13\" }");
+        let mut e = Engine::new(Profile::from_toml(&text).unwrap());
+        e.on_keys(&[]);
+        e.tick(1000);
+        e.set_passthrough(true);
+        e.on_jog(0); // the report right after a wheel mode change is skipped
+        e
+    }
+
+    #[test]
+    fn passthrough_hands_native_keys_and_wheel_to_resolve() {
+        let mut e = passthrough_engine();
+        let out = e.on_keys(&[Key::In.code()]);
+        assert!(has(&out, &Output::NativeKeys(vec![Key::In.code()])));
+        assert!(!out.iter().any(|o| matches!(o, Output::ResolveKey(_))), "not imitated with shortcuts");
+        assert_eq!(e.on_jog(20_000), vec![Output::NativeJog]);
+        assert!(has(&e.on_keys(&[]), &Output::NativeKeys(vec![])));
+        // A customised key still does the user's mapping.
+        let out = e.on_keys(&[Key::Out.code()]);
+        assert!(has(&out, &Output::KeysDown(shortcut("f13"))));
+        assert!(!out.iter().any(|o| matches!(o, Output::NativeKeys(_))));
+    }
+
+    #[test]
+    fn passthrough_keeps_the_fn_layer_in_the_app() {
+        let mut e = passthrough_engine();
+        e.on_keys(&[CUT]);
+        let out = e.on_keys(&[CUT, Key::Split.code()]);
+        assert!(!out.iter().any(|o| matches!(o, Output::NativeKeys(_))), "CUT and CUT + SPLIT are the app's");
+        let out = e.on_jog(crate::native::DIAL_UNITS);
+        assert!(has(&out, &Output::ResolveKey("editSelectItemAtPlayhead".into())), "CUT + SPLIT + wheel moves the clip");
+    }
+
+    #[test]
+    fn passthrough_leds_and_wheel_mode_follow_resolve() {
+        let mut e = passthrough_engine();
+        // JOG/SHTL/SCRL go to Resolve, which sets the mode on its device.
+        assert!(has(&e.on_keys(&[Key::Shuttle.code()]), &Output::NativeKeys(vec![Key::Shuttle.code()])));
+        assert!(has(&e.set_resolve_jog_mode(3), &Output::JogMode(3)));
+        assert!(has(&e.set_resolve_jog_leds(2), &Output::JogLeds(2)));
+        // Resolve's key LEDs show, the app keeps the page keys.
+        let in_led = Key::Cam1.led().unwrap(); // a key Resolve lights (multicam angle)
+        let cut_led = Key::Cut.led().unwrap();
+        let out = e.set_resolve_leds(in_led | cut_led);
+        let leds = out.iter().find_map(|o| if let Output::Leds(l) = o { Some(*l) } else { None }).unwrap();
+        assert_eq!(leds & in_led, in_led);
+        e.tick(1000 + BLINK_ON_MS); // blink off: the app's CUT LED is dark despite Resolve
+        let leds = e.desired_leds_for_test();
+        assert_eq!(leds & cut_led, 0);
+    }
+
+    #[test]
+    fn passthrough_normal_mode_taps_transition_keys_on_release() {
+        let mut e = passthrough_engine();
+        e.on_keys(&[CUT, DIS]);
+        e.on_keys(&[]);
+        assert_eq!(e.mode(), Mode::Normal);
+        e.on_keys(&[DIS]);
+        let out = e.on_keys(&[]);
+        let i = out.iter().position(|o| *o == Output::NativeKeys(vec![DIS])).expect("DIS pressed on Resolve's device");
+        assert!(out[i + 1..].contains(&Output::NativeKeys(vec![])), "and let go");
     }
 
     #[test]

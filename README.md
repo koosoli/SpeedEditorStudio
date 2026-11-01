@@ -6,18 +6,19 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 ![Speed Editor Studio](docs/images/studio.png)
 
 DaVinci Resolve opens the Speed Editor exclusively, so other tools can't add anything to it
-while Resolve runs. Speed Editor Studio takes over the device instead and does what Resolve
-would do. The wheel is calibrated against USB captures of Resolve driving a real Speed Editor,
-and native key gestures use the shortcuts from *your* Resolve keyboard layout. On top of
-that, you add your own pages, an Fn layer and Stream Deck-style actions. **You never have to
-change a shortcut in Resolve.**
+while Resolve runs. Speed Editor Studio takes over the device instead and presents Resolve
+with an **emulated Speed Editor**. Keys doing their native job and the wheel are passed
+through to Resolve unchanged, so they behave exactly like the original, Smart Insert and
+the jog feel included. On top of that, you add your own pages, an Fn layer and Stream
+Deck-style actions, which the app handles itself. **You never have to change a shortcut in
+Resolve.**
 
 ## Features
 
-- **Native behaviour, measured.** JOG, SHTL and SCRL match Resolve's own feel: speed, shuttle
-  curve, wheel modes and LEDs. Native gestures (press, double press, press-and-hold + wheel)
-  work as in the official manual: trim in/out, roll, slip, slide, swap clips, audio level,
-  split, ripple delete and more.
+- **Native behaviour, unchanged.** With [usbip-win2](https://github.com/vadimgrn/usbip-win2)
+  installed, native keys and the wheel go to Resolve through an emulated Speed Editor, so
+  Resolve itself handles them, including its LEDs and wheel modes. Without usbip-win2 the app
+  imitates them: a calibrated wheel and Resolve's shortcuts and menus.
 - **Three pages on CUT, DIS and SMTH CUT.** CUT is the "DaVinci" page: everything native,
   with any key you choose replaced by your own action. DIS and SMTH CUT are free pages. The
   active page's LED blinks.
@@ -53,6 +54,9 @@ for your own mapping.
 - DaVinci Resolve (developed and measured with Resolve Studio 21.1). For the script actions,
   set *Preferences › System › General › External scripting using* to **Local**.
 - A DaVinci Resolve Speed Editor, over USB or paired over Bluetooth.
+- Recommended: [usbip-win2](https://github.com/vadimgrn/usbip-win2/releases) (free,
+  Microsoft-signed drivers) for pass-through of native keys to Resolve. No restart was needed
+  after installing it.
 
 ## Build and run
 
@@ -64,6 +68,10 @@ cargo build --release
 ```
 
 Then start `target\release\se-studio.exe`. Turn on **Connect** and **Mappings active**.
+
+**Start Speed Editor Studio before DaVinci Resolve.** Windows lets only one program hold the
+Speed Editor, and Resolve takes one the moment it appears. When the app holds the real device
+first, Resolve uses the emulated one instead.
 
 - **Give to Resolve** hands the device back to Resolve's own driver whenever Resolve runs.
   It's off by default, because then your mappings can't work inside Resolve.
@@ -88,7 +96,7 @@ Resolve.
 | [`crates/runtime`](crates/runtime) | Device loop, keyboard output, Resolve scripting helper, menus via UI Automation, focus handling, wheel pacing |
 | [`apps/studio`](apps/studio) | The Tauri app (plain HTML/JS UI in `apps/studio/ui`) |
 | [`apps/se-mapper`](apps/se-mapper) | Command-line runner |
-| [`tools/se-probe`](tools/se-probe), [`tools/capture`](tools/capture) | Protocol probe, USB capture decoder and the test robots used for measuring Resolve |
+| [`tools/se-probe`](tools/se-probe), [`tools/se-emu`](tools/se-emu), [`tools/capture`](tools/capture) | Protocol probe, stand-alone emulated Speed Editor, USB capture decoder and the test robots used for measuring Resolve |
 
 Everything measured along the way is in [`docs/FINDINGS.md`](docs/FINDINGS.md), from wheel
 units per frame and the shuttle curve to which key sequences give a ripple, roll or slip
@@ -96,12 +104,13 @@ trim. Decoded captures are in [`docs/captures`](docs/captures).
 
 ## Known limits
 
-- Some Speed Editor functions have no Resolve keyboard command, so they do nothing until you
-  map them: CLOSE UP, TRANS DUR, SYNC BIN, SMTH CUT (as a transition), SRC O/WR and others.
-- TRIM IN / TRIM OUT through the keyboard follow Resolve's trim tool. Whether a trim ripples
-  depends on the mode Resolve is in.
-- Some shortcuts can't be typed on every keyboard layout (for example `[`, `]` and some Alt+F
-  combinations on a German layout). Those functions go through Resolve's menus instead.
+- Without usbip-win2, some Speed Editor functions have no Resolve keyboard command, so they do
+  nothing until you map them: CLOSE UP, TRANS DUR, SYNC BIN, SMTH CUT (as a transition), SRC
+  O/WR and others. Some shortcuts can't be typed on every keyboard layout (for example `[`, `]`
+  and some Alt+F combinations on a German layout); those go through Resolve's menus.
+- The emulated device doesn't yet give the real device's answer in the authentication
+  handshake (the device side uses an unknown calculation). Resolve retries and then accepts it
+  anyway; a future Resolve version might be stricter.
 - The jog wheel's click is mechanical only. The device reports nothing, so it can't be mapped.
 - Windows only for now.
 

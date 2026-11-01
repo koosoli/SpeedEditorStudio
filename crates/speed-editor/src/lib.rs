@@ -6,6 +6,7 @@
 //! authenticated `Controller` (owns the device, may set LEDs and jog modes).
 
 pub mod auth;
+pub mod emulator;
 pub mod keys;
 pub mod report;
 

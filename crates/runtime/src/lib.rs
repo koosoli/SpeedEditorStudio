@@ -16,6 +16,7 @@ mod pacer;
 pub mod processes;
 pub mod resolve;
 mod resolve_keys;
+mod virtual_device;
 
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use std::thread::{self, JoinHandle};
@@ -24,6 +25,7 @@ use std::time::{Duration, Instant};
 use hidapi::HidApi;
 use mapper::{Engine, Mode, Output, Profile};
 use speed_editor::device::{self, Controller};
+use speed_editor::emulator::{HostReport, key_report};
 use speed_editor::{JogMode, Key, Report};
 
 const POLL: Duration = Duration::from_millis(20);
@@ -68,6 +70,9 @@ pub struct Options {
     pub active: bool,
     /// Leave the device to DaVinci Resolve while it runs.
     pub yield_to_resolve: bool,
+    /// Hand native keys and the wheel to Resolve through an emulated Speed
+    /// Editor (needs usbip-win2); otherwise they are imitated with shortcuts.
+    pub pass_through: bool,
 }
 
 enum Command {
@@ -146,6 +151,11 @@ struct Loop<F> {
     pacer: pacer::Pacer,
     /// Debug log of reports and outputs, when OPEN_SPEED_EDITOR_LOG names a file.
     log: Option<std::fs::File>,
+    /// Pass-through: the emulated Speed Editor Resolve uses, and the last
+    /// wheel report (handed on as it is).
+    pass_through: bool,
+    virtual_device: Option<virtual_device::VirtualDevice>,
+    last_jog: [u8; 7],
     commands: Receiver<Command>,
     on_event: F,
     clock: Instant,
@@ -168,6 +178,9 @@ impl<F: Fn(Event)> Loop<F> {
             menus: None,
             pacer: pacer::Pacer::default(),
             log: std::env::var_os("OPEN_SPEED_EDITOR_LOG").and_then(|p| std::fs::File::create(p).ok()),
+            pass_through: options.pass_through,
+            virtual_device: None,
+            last_jog: [3, 0, 0, 0, 0, 0, 0xff],
             commands,
             on_event,
             clock: Instant::now(),
@@ -194,6 +207,15 @@ impl<F: Fn(Event)> Loop<F> {
             }
         };
         let mut last_wait = String::new();
+        if self.pass_through {
+            match virtual_device::VirtualDevice::start() {
+                Ok(device) => {
+                    self.virtual_device = Some(device);
+                    (self.on_event)(Event::Status("Resolve pass-through on: native keys and the wheel go to Resolve unchanged".into()));
+                }
+                Err(e) => (self.on_event)(Event::Status(format!("Resolve pass-through off ({e}); native keys use Resolve's shortcuts"))),
+            }
+        }
         while !self.stopping {
             if self.yield_to_resolve && processes::is_running(processes::RESOLVE_EXE) {
                 if last_wait != "resolve" {
@@ -206,6 +228,8 @@ impl<F: Fn(Event)> Loop<F> {
             let _ = api.refresh_devices();
             // Prefer the cable when the device is connected both ways.
             let mut interfaces = device::interfaces(&api);
+            // Never our own emulated Speed Editor.
+            interfaces.retain(|i| i.serial.as_deref() != Some(virtual_device::SERIAL));
             interfaces.sort_by_key(|i| i.bus != "Usb");
             let bus = interfaces.first().map(|i| if i.bus == "Usb" { "USB" } else { "Bluetooth" });
             let controller = interfaces
@@ -258,6 +282,7 @@ impl<F: Fn(Event)> Loop<F> {
         // first outputs, matching what Resolve would set on DaVinci pages.
         let initial = self.engine.on_keys(&[]);
         self.apply(initial, controller)?;
+        self.sync_virtual_device(controller)?;
         self.reported = None;
         self.refresh_layout();
         self.report_state();
@@ -282,11 +307,17 @@ impl<F: Fn(Event)> Loop<F> {
                     }
                     Report::Jog { mode, value } => {
                         self.debug(format_args!("jog mode {mode} value {value}"));
+                        if n >= 7 {
+                            self.last_jog.copy_from_slice(&buf[..7]);
+                        }
                         (self.on_event)(Event::Jog { mode, value });
                         self.engine.on_jog(value)
                     }
                     Report::Battery { charging, level } => {
                         (self.on_event)(Event::Battery { charging, level });
+                        if let Some(device) = &self.virtual_device {
+                            device.emulator.send_input(&buf[..n.min(3)]);
+                        }
                         Vec::new()
                     }
                     Report::Other(_) => Vec::new(),
@@ -297,6 +328,7 @@ impl<F: Fn(Event)> Loop<F> {
             let tick = self.engine.tick(self.clock.elapsed().as_millis() as u64);
             self.apply(tick, controller)?;
             self.pump_pacer();
+            self.sync_virtual_device(controller)?;
             for reply in self.resolve.replies() {
                 if self.pacer.on_reply(reply.id, reply.ok, &reply.message, Instant::now()) {
                     continue;
@@ -431,6 +463,31 @@ impl<F: Fn(Event)> Loop<F> {
         Ok(())
     }
 
+    /// Pass-through: follows whether the emulated Speed Editor is attached,
+    /// and applies the LEDs and wheel mode Resolve set on it.
+    fn sync_virtual_device(&mut self, controller: &Controller) -> Result<(), String> {
+        let Some(device) = &self.virtual_device else { return Ok(()) };
+        let attached = device.emulator.attached();
+        let reports = device.emulator.host_reports();
+        for event in device.emulator.events() {
+            self.debug(format_args!("emulated Speed Editor: {event:?}"));
+        }
+        let mut outputs = Vec::new();
+        if attached != self.engine.passthrough() {
+            outputs.extend(self.engine.set_passthrough(attached));
+        }
+        for report in reports {
+            self.debug(format_args!("Resolve set {report:?}"));
+            outputs.extend(match report {
+                HostReport::KeyLeds(leds) => self.engine.set_resolve_leds(leds),
+                HostReport::JogMode(mode) => self.engine.set_resolve_jog_mode(mode),
+                HostReport::JogLeds(leds) => self.engine.set_resolve_jog_leds(leds),
+                HostReport::Other(_) => Vec::new(),
+            });
+        }
+        self.apply(outputs, controller)
+    }
+
     /// Sends the wheel steps Resolve is ready for and asks for its playhead.
     fn pump_pacer(&mut self) {
         if !self.active {
@@ -484,10 +541,22 @@ impl<F: Fn(Event)> Loop<F> {
                 }
                 Output::JogLeds(leds) => controller.set_jog_leds(leds).map_err(|e| e.to_string())?,
                 Output::KeysUp(s) => self.input.release(&s),
+                // Letting go of native keys always reaches Resolve.
+                Output::NativeKeys(codes) if codes.is_empty() || self.active => {
+                    if let Some(device) = &self.virtual_device {
+                        device.emulator.send_input(&key_report(&codes));
+                    }
+                }
+                Output::NativeKeys(_) => {}
                 Output::Status(text) => (self.on_event)(Event::Status(text)),
                 _ if !self.active => {}
                 Output::KeysDown(s) => self.input.press(&s),
                 Output::Tap(s) => self.input.tap(&s),
+                Output::NativeJog => {
+                    if let Some(device) = &self.virtual_device {
+                        device.emulator.send_input(&self.last_jog);
+                    }
+                }
                 Output::PlayheadSteps { steps, forward, reverse, frames } => {
                     self.pacer.add(steps, forward, reverse, frames, Instant::now());
                     self.pump_pacer();

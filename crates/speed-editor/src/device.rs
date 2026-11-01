@@ -54,6 +54,7 @@ pub struct Interface {
     pub usage_page: u16,
     pub usage: u16,
     pub product: Option<String>,
+    pub serial: Option<String>,
     pub bus: String,
 }
 
@@ -67,6 +68,7 @@ pub fn interfaces(api: &HidApi) -> Vec<Interface> {
             usage_page: d.usage_page(),
             usage: d.usage(),
             product: d.product_string().map(str::to_owned),
+            serial: d.serial_number().map(str::to_owned),
             bus: format!("{:?}", d.bus_type()),
         })
         .collect()

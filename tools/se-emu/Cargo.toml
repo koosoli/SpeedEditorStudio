@@ -1,0 +1,9 @@
+[package]
+name = "se-emu"
+description = "Emulated Speed Editor over USB/IP (proof of concept for passing native keys to Resolve)"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+speed-editor = { path = "../../crates/speed-editor", default-features = false }

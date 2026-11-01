@@ -1,6 +1,7 @@
 //! se-probe: diagnostic tool for the Speed Editor protocol.
 //!
 //!   se-probe list                 show the device's HID interfaces
+//!   se-probe descriptor           print each interface's HID report descriptor (works while Resolve runs)
 //!   se-probe watch   [options]    read-only: never sends anything to the device
 //!   se-probe control [options]    authenticate and own the device (Resolve closed!)
 //!
@@ -31,7 +32,7 @@ struct Options {
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let Some(command) = args.first().map(String::as_str) else {
-        eprintln!("usage: se-probe <list|watch|control> [--raw] [--log FILE] [--seconds N]");
+        eprintln!("usage: se-probe <list|descriptor|watch|control> [--raw] [--log FILE] [--seconds N]");
         return ExitCode::from(2);
     };
     let options = match parse_options(&args[1..]) {
@@ -51,6 +52,7 @@ fn main() -> ExitCode {
 
     let result = match command {
         "list" => list(&api),
+        "descriptor" => descriptor(&api),
         "watch" => watch(&api, options),
         "control" => control(&api, options),
         other => Err(format!("unknown command {other:?}")),
@@ -104,6 +106,20 @@ fn list(api: &HidApi) -> Result<(), String> {
             i.product.as_deref().unwrap_or("?"),
             i.path.to_string_lossy(),
         );
+    }
+    Ok(())
+}
+
+/// Prints the HID report descriptor of every interface. On Windows, hidapi
+/// rebuilds it from the parsed data, so it describes the same reports but may
+/// not match the device's bytes exactly.
+fn descriptor(api: &HidApi) -> Result<(), String> {
+    for i in find_interfaces(api)? {
+        let device = api.open_path(&i.path).map_err(|e| format!("cannot open {}: {e}", i.path.to_string_lossy()))?;
+        let mut buf = [0u8; hidapi::MAX_REPORT_DESCRIPTOR_SIZE];
+        let n = device.get_report_descriptor(&mut buf).map_err(|e| e.to_string())?;
+        println!("interface {} usage {:04x}:{:04x}, {n} bytes
+{}", i.interface_number, i.usage_page, i.usage, hex(&buf[..n]));
     }
     Ok(())
 }

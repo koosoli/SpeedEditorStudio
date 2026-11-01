@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/speed-editor", "crates/mapper", "crates/runtime", "apps/se-mapper", "apps/studio", "tools/se-probe"]
+members = ["crates/speed-editor", "crates/mapper", "crates/runtime", "apps/se-mapper", "apps/studio", "tools/se-probe", "tools/se-emu"]
 
 [workspace.package]
 edition = "2024"
