@@ -73,6 +73,11 @@ Then start `target\release\se-studio.exe`. Turn on **Connect** and **Mappings ac
 Speed Editor, and Resolve takes one the moment it appears. When the app holds the real device
 first, Resolve uses the emulated one instead.
 
+The easiest way is **Start with Windows** (top bar): the app then starts hidden in the system
+tray when you sign in. Closing the window keeps it running in the tray; **Quit** in the tray
+menu ends it. If Resolve got the device first anyway, the app says so: quit Resolve and start
+it again.
+
 - **Give to Resolve** hands the device back to Resolve's own driver whenever Resolve runs.
   It's off by default, because then your mappings can't work inside Resolve.
 - Your profile is saved to `%APPDATA%\OpenSpeedEditor\profile.toml`.

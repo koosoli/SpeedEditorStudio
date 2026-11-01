@@ -22,6 +22,9 @@
     <label class="switch" title="On: when DaVinci Resolve starts, the app lets go and Resolve gets the Speed Editor with its own native controls (your bindings pause until Resolve quits). Off: the app keeps the Speed Editor, so your bindings work inside Resolve; start this app before Resolve.">
       <input type="checkbox" id="yieldToggle"><span class="track"></span><span>Give to Resolve</span>
     </label>
+    <label class="switch" title="Starts the app hidden in the tray when you sign in to Windows, so it holds the Speed Editor before DaVinci Resolve starts. Closing the window keeps the app running in the tray; quit it from the tray icon.">
+      <input type="checkbox" id="autostartToggle"><span class="track"></span><span>Start with Windows</span>
+    </label>
     <button id="learnBtn" class="ghost" title="Press a key on the Speed Editor to select it">Learn</button>
     <button id="importBtn" class="ghost" title="Load a profile file, e.g. from another computer">Import…</button>
     <button id="exportBtn" class="ghost" title="Save this profile to a file you can take to another computer">Export…</button>

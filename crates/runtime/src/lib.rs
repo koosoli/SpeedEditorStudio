@@ -238,6 +238,22 @@ impl<F: Fn(Event)> Loop<F> {
                 .and_then(|i| Controller::open(&api, i).map_err(|e| e.to_string()));
             let mut controller = match controller {
                 Ok(c) => c,
+                // The device is there but can't be opened while Resolve runs:
+                // Resolve has it.
+                Err(_) if !interfaces.is_empty() && processes::is_running(processes::RESOLVE_EXE) => {
+                    let e = if self.virtual_device.is_some() {
+                        "DaVinci Resolve has the Speed Editor. Quit Resolve and start it again:                          the app then takes the Speed Editor and Resolve uses the emulated one."
+                    } else {
+                        "DaVinci Resolve has the Speed Editor. Quit Resolve, then start it after this app."
+                    }
+                    .to_string();
+                    if e != last_wait {
+                        (self.on_event)(Event::Waiting(e.clone()));
+                        last_wait = e;
+                    }
+                    self.idle(RETRY);
+                    continue;
+                }
                 Err(e) => {
                     if e != last_wait {
                         (self.on_event)(Event::Waiting(e.clone()));

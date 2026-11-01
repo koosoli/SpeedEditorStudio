@@ -4,11 +4,18 @@
 //! owns the runtime. "Connected" means the app has taken the device over
 //! (Resolve must be closed); "mappings active" decides whether key presses
 //! fire their actions or only light up in the editor.
+//!
+//! The app lives in the system tray: closing the window hides it, Quit in the
+//! tray menu ends it. "Start with Windows" starts it hidden at sign-in, so it
+//! holds the Speed Editor before DaVinci Resolve can. A second start just
+//! shows the running app.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::collections::BTreeMap;
+use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
+use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -17,10 +24,19 @@ use mapper::{Profile, ProfileDoc};
 use runtime::resolve::ResolveBridge;
 use runtime::{Event, Options, Runtime};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, State};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_dialog::DialogExt;
 
 const EXAMPLE_PROFILE: &str = include_str!("../../../profiles/example.toml");
+
+/// Started with this argument (by "Start with Windows"), the window stays hidden.
+const HIDDEN_ARG: &str = "--hidden";
+const TRAY_ID: &str = "main";
+const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
+const RUN_VALUE: &str = "Speed Editor Studio";
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 struct AppState {
     path: PathBuf,
@@ -190,6 +206,9 @@ fn connect(
         old.stop();
     }
     *slot = Some(Runtime::spawn(profile, Options { active, yield_to_resolve, pass_through: true }, move |event| {
+        if let Some(text) = tray_text(&event) {
+            set_tray_status(&app, &text);
+        }
         let _ = app.emit("runtime", UiEvent::from(event));
     }));
     Ok(())
@@ -197,10 +216,102 @@ fn connect(
 
 /// Releases the device and every key the app pressed.
 #[tauri::command]
-fn disconnect(state: State<AppState>) {
+fn disconnect(app: AppHandle, state: State<AppState>) {
     if let Some(runtime) = state.runtime.lock().unwrap().take() {
         runtime.stop();
     }
+    set_tray_status(&app, "not connected");
+}
+
+/// Whether the app starts with Windows (hidden, in the tray).
+#[tauri::command]
+fn autostart_enabled() -> bool {
+    reg(&["query", RUN_KEY, "/v", RUN_VALUE]).is_ok()
+}
+
+#[tauri::command]
+fn set_autostart(enabled: bool) -> Result<(), String> {
+    if enabled {
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let command = format!("\"{}\" {HIDDEN_ARG}", exe.display());
+        reg(&["add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", &command, "/f"])
+    } else if autostart_enabled() {
+        reg(&["delete", RUN_KEY, "/v", RUN_VALUE, "/f"])
+    } else {
+        Ok(())
+    }
+}
+
+/// Runs reg.exe on the current user's registry.
+fn reg(args: &[&str]) -> Result<(), String> {
+    let status = Command::new("reg")
+        .args(args)
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map_err(|e| format!("cannot run reg: {e}"))?;
+    if status.status.success() { Ok(()) } else { Err(String::from_utf8_lossy(&status.stderr).trim().to_string()) }
+}
+
+fn show_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+/// Lets go of the device (so every key is released and the emulated Speed
+/// Editor is unplugged) before the app ends.
+fn quit(app: &AppHandle) {
+    if let Some(runtime) = app.state::<AppState>().runtime.lock().unwrap().take() {
+        runtime.stop();
+    }
+    app.exit(0);
+}
+
+/// The tray tooltip line for runtime events that change the connection.
+fn tray_text(event: &Event) -> Option<String> {
+    match event {
+        Event::Connected { bus } => Some(format!("connected ({bus})")),
+        Event::Waiting(text) => Some(text.clone()),
+        Event::Disconnected(_) => Some("reconnecting…".into()),
+        Event::YieldedToResolve => Some("DaVinci Resolve has the Speed Editor".into()),
+        Event::Stopped => Some("not connected".into()),
+        _ => None,
+    }
+}
+
+fn set_tray_status(app: &AppHandle, text: &str) {
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        // Windows shows at most 127 characters.
+        let tip: String = format!("Speed Editor Studio: {text}").chars().take(127).collect();
+        let _ = tray.set_tooltip(Some(tip));
+    }
+}
+
+fn build_tray(app: &tauri::App) -> tauri::Result<()> {
+    let show = MenuItem::with_id(app, "show", "Show Speed Editor Studio", true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&show, &quit_item])?;
+    let mut tray = TrayIconBuilder::with_id(TRAY_ID)
+        .tooltip("Speed Editor Studio")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "show" => show_window(app),
+            "quit" => quit(app),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+                show_window(tray.app_handle());
+            }
+        });
+    if let Some(icon) = app.default_window_icon() {
+        tray = tray.icon(icon.clone());
+    }
+    tray.build(app)?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -229,7 +340,24 @@ fn preview_profile(doc: ProfileDoc, state: State<AppState>) -> Result<(), String
 
 fn main() {
     tauri::Builder::default()
+        // A second start (e.g. from the Start menu while it runs from sign-in)
+        // shows the running app instead.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_window(app)))
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            build_tray(app)?;
+            if !std::env::args().any(|a| a == HIDDEN_ARG) {
+                show_window(app.handle());
+            }
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Closing the window keeps the app running in the tray.
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .manage(AppState { path: profile_path(), runtime: Mutex::new(None) })
         .invoke_handler(tauri::generate_handler![
             load_profile,
@@ -247,6 +375,8 @@ fn main() {
             set_active,
             set_yield_to_resolve,
             preview_profile,
+            autostart_enabled,
+            set_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("failed to start Speed Editor Studio");

@@ -1055,6 +1055,21 @@ async function init() {
     savePrefs();
   };
 
+  $("autostartToggle").onchange = async e => {
+    try {
+      await api.invoke("set_autostart", { enabled: e.target.checked });
+      log(e.target.checked
+        ? "Starts with Windows, hidden in the tray, so it has the Speed Editor before Resolve starts"
+        : "No longer starts with Windows");
+    } catch (err) {
+      e.target.checked = !e.target.checked;
+      log("Start with Windows: " + err);
+    }
+  };
+  if (window.__TAURI__) {
+    $("autostartToggle").checked = await api.invoke("autostart_enabled").catch(() => false);
+  }
+
   // Restore the last connection settings, so the app picks up where it was.
   const prefs = loadPrefs();
   S.active = !!prefs.active;
