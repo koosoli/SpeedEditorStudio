@@ -119,11 +119,26 @@ trim. Decoded captures are in [`docs/captures`](docs/captures).
 - The jog wheel's click is mechanical only. The device reports nothing, so it can't be mapped.
 - Windows only for now.
 
+## License
+
+Copyright 2026 Olivier KOOS. Licensed under the
+[PolyForm Noncommercial License 1.0.0](LICENSE).
+
+- **Free for noncommercial use:** personal projects, hobby work, study, research, and
+  charities, schools and public institutions.
+- **Not for commercial use.** For commercial use, ask Olivier KOOS for a separate license.
+- **Credit required:** anyone who passes on any part of the software must include the
+  license terms and the `Required Notice` line from [`LICENSE`](LICENSE).
+
+This is a source-available license, not an OSI-approved open-source license.
+
 ## Credits
 
+Created by Olivier KOOS.
+
 The device authentication and the key, LED and jog tables are ported from
-[bmd.py](https://github.com/smunaut/blackmagic-misc/blob/master/bmd.py) by Sylvain Munaut.
-See [`NOTICE`](NOTICE).
+[bmd.py](https://github.com/smunaut/blackmagic-misc/blob/master/bmd.py) by Sylvain Munaut,
+under the Apache License 2.0. See [`NOTICE`](NOTICE).
 
 *DaVinci Resolve and Speed Editor are trademarks of Blackmagic Design. This project is not
 affiliated with Blackmagic Design.*

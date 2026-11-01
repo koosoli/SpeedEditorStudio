@@ -1,4 +1,11 @@
-Open Speed Editor Mapper
+Speed Editor Studio
+Copyright 2026 Olivier KOOS (https://github.com/koosoli)
+
+Licensed under the PolyForm Noncommercial License 1.0.0 (see LICENSE).
+Anyone who gets a copy of any part of this software must also get the
+license terms and the "Required Notice" line in LICENSE.
+
+Third-party code
 
 This project contains code ported from bmd.py by Sylvain Munaut:
   Copyright (C) 2021 Sylvain Munaut <tnt@246tNt.com>
@@ -7,4 +14,8 @@ This project contains code ported from bmd.py by Sylvain Munaut:
 
 Ported parts: the authentication algorithm and constants
 (crates/speed-editor/src/auth.rs), and the key code, LED and jog mode
-tables (crates/speed-editor/src/keys.rs).
+tables (crates/speed-editor/src/keys.rs). Those ported parts remain
+available under the Apache License, Version 2.0.
+
+The libraries the programs are built with keep their own licenses, as listed
+in Cargo.lock and their packages.
