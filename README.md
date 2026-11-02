@@ -52,6 +52,8 @@ Resolve.**
 - **Source Tape on the Edit page too.** SOURCE switches the Edit page's source viewer
   between Source Clip and Source Tape, as it does on the Cut page (needs Resolve's
   scripting set to Local, see Requirements).
+- **Switch Resolve's pages.** SMTH CUT + CAM 1–7 opens the Media, Cut, Edit, Fusion, Color,
+  Fairlight and Deliver page (needs Resolve's scripting set to Local, see Requirements).
 - **Select a clip on a certain track.** DIS + CAM 1–8 selects the clip under the playhead on
   that track, with its linked sound, using Resolve's own selection keys.
 - **Video or audio only.** VIDEO ONLY or AUDIO ONLY pressed on its own lights up and makes

@@ -596,7 +596,8 @@ function modifierSwitch(id) {
   const wrap = el("div", "section");
   wrap.append(box, el("p", "info",
     `Held together with another key, ${KEY_LABELS[id]} picks its own layer (“${KEY_LABELS[id]} + key”) on every page. `
-    + `A quick tap on its own still opens page ${S.doc.page_keys.indexOf(id) + 1}.`));
+    + `A quick tap on its own still opens page ${S.doc.page_keys.indexOf(id) + 1}.`
+    + (id === "smooth_cut" ? " On a DaVinci page, SMTH CUT + CAM 1–7 opens Resolve's pages: Media, Cut, Edit, Fusion, Color, Fairlight, Deliver." : "")));
   return wrap;
 }
 

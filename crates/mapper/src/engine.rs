@@ -430,6 +430,14 @@ impl Engine {
                                 Key::CloseUp => self.toggle_trim_tool(&mut out),
                                 _ => self.native_fn_press(key, &mut out),
                             },
+                            // SMTH CUT + CAM 1-7 opens Resolve's pages, in the
+                            // order of the page buttons (Media … Deliver).
+                            Some(Key::SmoothCut) => {
+                                if let Some(page) = resolve_page(key) {
+                                    let params = [("page".to_string(), page.to_string())].into_iter().collect();
+                                    out.push(Output::Resolve { command: "page".into(), params });
+                                }
+                            }
                             Some(_) => {}
                         }
                     }
@@ -756,7 +764,7 @@ impl Engine {
         }
     }
 
-    #[cfg(test)]
+#[cfg(test)]
     fn desired_leds_for_test(&mut self) -> u32 {
         let mut out = Vec::new();
         self.sent_leds = None;
@@ -784,6 +792,20 @@ fn step_output(step: Step) -> Output {
         Step::Key(key) => Output::Tap(Shortcut::parse(key).expect("native step keys are valid")),
         Step::Menu(path) => Output::ResolveMenu(path.iter().map(|p| p.to_string()).collect()),
     }
+}
+
+/// The Resolve page CAM 1-7 opens with SMTH CUT held.
+fn resolve_page(key: Key) -> Option<&'static str> {
+    Some(match key {
+        Key::Cam1 => "media",
+        Key::Cam2 => "cut",
+        Key::Cam3 => "edit",
+        Key::Cam4 => "fusion",
+        Key::Cam5 => "color",
+        Key::Cam6 => "fairlight",
+        Key::Cam7 => "deliver",
+        _ => return None,
+    })
 }
 
 #[cfg(test)]
@@ -1355,6 +1377,39 @@ mod tests {
         e.on_keys(&[]);
         e.on_keys(&[CUT]);
         assert!(has(&e.on_keys(&[CUT, CAM1]), &Output::SoloTrack { track: 1, video: true, audio: true }));
+    }
+
+    #[test]
+    fn smooth_cut_and_cam_open_resolve_pages() {
+        let text = r#"
+            version = 1
+            page_keys = ["cut", "dissolve", "smooth_cut"]
+            toggle_chord = ["cut", "dissolve"]
+            modifier_keys = ["smooth_cut"]
+
+            [[pages]]
+            name = "DaVinci"
+            davinci_defaults = true
+            wheel = { davinci = {} }
+
+            [[pages]]
+            name = "Two"
+
+            [[pages]]
+            name = "Three"
+        "#;
+        let mut e = Engine::new(Profile::from_toml(text).unwrap());
+        e.on_keys(&[]);
+        let smth = Key::SmoothCut.code();
+        e.on_keys(&[smth]);
+        let out = e.on_keys(&[smth, Key::Cam3.code()]);
+        let page = |p: &str| Output::Resolve { command: "page".into(), params: [("page".to_string(), p.to_string())].into_iter().collect() };
+        assert!(has(&out, &page("edit")), "{out:?}");
+        e.on_keys(&[smth]);
+        assert!(has(&e.on_keys(&[smth, Key::Cam7.code()]), &page("deliver")));
+        e.on_keys(&[]);
+        // CAM 3 on its own keeps its native function.
+        assert!(!has(&e.on_keys(&[Key::Cam3.code()]), &page("edit")));
     }
 
     #[test]
