@@ -192,7 +192,6 @@ function renderTopbar() {
   save.disabled = !dirty() || !!S.error;
   $("saveLabel").textContent = dirty() ? "Save •" : "Save";
   $("revertBtn").disabled = !dirty();
-  $("learnBtn").classList.toggle("on", S.learn);
   $("connectToggle").checked = S.connected;
   $("activeToggle").checked = S.active;
   $("activeToggle").disabled = !S.connected;
@@ -203,8 +202,6 @@ function renderTopbar() {
     ? "⚠ " + S.error
     : normal
       ? `Normal mode on the device: your mappings are off and CUT, DIS and SMTH CUT work as transition keys. Press ${chordText()} together to switch the mappings back on.`
-    : S.learn
-      ? "Learn: press a key on the Speed Editor to select it."
     : fnLayer() && !modifiers().some(m => S.held.has(m))
       ? `Editing the ${keyLabel(activeLayer())} + key layer · choose “Keys” above the picture to go back`
       : page().davinci_defaults
@@ -496,7 +493,7 @@ function pageSettings() {
   counts.append(pill(count, "keys"), ...modifiers().map(m => pill(Object.keys(layerKeys(page(), m)).length, `${keyLabel(m)} + key`)));
   const mappings = el("div", "section");
   mappings.append(el("div", "field-label", "Mappings on this page"), counts,
-    el("p", "info", `Click a key on the picture, or turn on Learn and press it on the device. Hold ${modifiers().map(keyLabel).join(", ") || "a modifier"} and press another key for the combinations; pick the layer above the picture to edit them. A quick tap still opens their page.`));
+    el("p", "info", `Click a key on the picture, or press it on the device while this window is in front. Hold ${modifiers().map(keyLabel).join(", ") || "a modifier"} and press another key for the combinations; pick the layer above the picture to edit them. A quick tap still opens their page.`));
   const foot = el("div", "panel-foot");
   foot.append(resetButton());
   return [
@@ -971,9 +968,10 @@ function onRuntime(e) {
     case "keys": {
       const pressed = e.keys.filter(k => !S.held.has(k));
       S.held = new Set(e.keys);
-      if (S.learn && pressed.length) {
+      // While you edit here (this window in front), a key pressed on the
+      // device selects it; while you work in Resolve, nothing changes.
+      if (pressed.length && document.hasFocus()) {
         S.selected = pressed[pressed.length - 1];
-        S.learn = false;
       }
       render();
       for (const id of pressed) flash(document.querySelector(`.key[data-key="${id}"]`));
@@ -1027,7 +1025,9 @@ function connectedText() {
 
 function setStatus(kind, text) {
   $("status").className = "status " + kind;
-  $("statusText").textContent = text;
+  $("status").title = text;
+  const short = { ok: S.bus || "On", waiting: "…", resolve: "Resolve", off: "Off" };
+  $("statusText").textContent = short[kind] || text;
 }
 
 // ---------------------------------------------------------------- wiring
@@ -1122,11 +1122,6 @@ async function init() {
       log("Import failed: " + e);
     }
   };
-  $("learnBtn").onclick = () => {
-    S.learn = !S.learn;
-    if (S.learn && !S.connected) log("Learn needs the Speed Editor connected");
-    render();
-  };
   $("connectToggle").onchange = async e => {
     await setConnected(e.target.checked);
     savePrefs();
@@ -1177,7 +1172,7 @@ async function init() {
   window.addEventListener("keydown", e => {
     if (recorder) return;
     if (e.ctrlKey && e.code === "KeyS") { e.preventDefault(); save(); }
-    if (e.code === "Escape" && document.activeElement.tagName !== "INPUT") { S.selected = null; S.learn = false; render(); }
+    if (e.code === "Escape" && document.activeElement.tagName !== "INPUT") { S.selected = null; render(); }
   });
   window.addEventListener("beforeunload", e => { if (dirty()) e.preventDefault(); });
   new ResizeObserver(fitDevice).observe(document.querySelector(".device-area"));
