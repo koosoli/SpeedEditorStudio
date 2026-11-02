@@ -13,23 +13,30 @@
     <div class="spacer"></div>
     <div class="status" id="status"><span class="dot"></span><span id="statusText">Not connected</span></div>
     <div class="battery" id="battery" hidden></div>
-    <label class="switch" title="Take over the Speed Editor. DaVinci Resolve must be closed.">
+    <label class="switch" title="Connect: take over the Speed Editor">
       <input type="checkbox" id="connectToggle"><span class="track"></span><span>Connect</span>
     </label>
-    <label class="switch" title="When off, key presses only light up here, so you can test without triggering anything.">
-      <input type="checkbox" id="activeToggle"><span class="track"></span><span>Mappings active</span>
+    <label class="switch" title="Mappings active: when off, key presses only light up here, so you can test without triggering anything">
+      <input type="checkbox" id="activeToggle"><span class="track"></span><span>Active</span>
     </label>
-    <label class="switch" title="On: when DaVinci Resolve starts, the app lets go and Resolve gets the Speed Editor with its own native controls (your bindings pause until Resolve quits). Off: the app keeps the Speed Editor, so your bindings work inside Resolve; start this app before Resolve.">
-      <input type="checkbox" id="yieldToggle"><span class="track"></span><span>Give to Resolve</span>
-    </label>
-    <label class="switch" title="Starts the app hidden in the tray when you sign in to Windows, so it holds the Speed Editor before DaVinci Resolve starts. Closing the window keeps the app running in the tray; quit it from the tray icon.">
-      <input type="checkbox" id="autostartToggle"><span class="track"></span><span>Start with Windows</span>
-    </label>
-    <button id="learnBtn" class="ghost" title="Press a key on the Speed Editor to select it">Learn</button>
-    <button id="importBtn" class="ghost" title="Load a profile file, e.g. from another computer">Import…</button>
-    <button id="exportBtn" class="ghost" title="Save this profile to a file you can take to another computer">Export…</button>
-    <button id="revertBtn" class="ghost" disabled>Revert</button>
-    <button id="saveBtn" class="primary" disabled>Save</button>
+    <div class="toolbar">
+      <button id="learnBtn" class="ghost icon-btn" data-icon="learn" title="Learn: press a key on the Speed Editor to select it" aria-label="Learn"></button>
+      <button id="importBtn" class="ghost icon-btn" data-icon="import" title="Import a profile file, e.g. from another computer" aria-label="Import"></button>
+      <button id="exportBtn" class="ghost icon-btn" data-icon="export" title="Export this profile to a file you can take to another computer" aria-label="Export"></button>
+      <button id="revertBtn" class="ghost icon-btn" data-icon="revert" title="Revert: undo all unsaved changes" aria-label="Revert" disabled></button>
+      <details class="menu" id="settingsMenu">
+        <summary class="icon-btn ghost" data-icon="gear" title="Settings" aria-label="Settings"></summary>
+        <div class="menu-body">
+          <label class="switch" title="On: when DaVinci Resolve starts, the app lets go and Resolve gets the Speed Editor with its own native controls (your bindings pause until Resolve quits). Off: the app keeps the Speed Editor, so your bindings work inside Resolve; start this app before Resolve.">
+            <input type="checkbox" id="yieldToggle"><span class="track"></span><span>Give to Resolve</span>
+          </label>
+          <label class="switch" title="Starts the app hidden in the tray when you sign in, so it holds the Speed Editor before DaVinci Resolve starts. Closing the window keeps the app running in the tray; quit it from the tray icon.">
+            <input type="checkbox" id="autostartToggle"><span class="track"></span><span>Start with Windows</span>
+          </label>
+        </div>
+      </details>
+    </div>
+    <button id="saveBtn" class="primary" data-icon="save" disabled><span id="saveLabel">Save</span></button>
   </header>
 
   <nav class="pages" id="pageTabs"></nav>
@@ -52,17 +59,18 @@
 
   <section class="palette">
     <div class="palette-head">
-      <h2>Actions</h2>
+      <h2 title="Drag onto a key, or select a key and click">Actions</h2>
       <div class="palette-groups" id="paletteGroups"></div>
       <input id="paletteSearch" type="search" placeholder="Search actions…">
       <div class="assign-to" id="assignTo"></div>
-      <span class="palette-tip">Drag onto a key, or select a key and click.</span>
+
     </div>
     <div class="palette-items" id="paletteItems"></div>
   </section>
 
   <footer class="log" id="log"></footer>
 
+  <script src="icons.js"></script>
   <script src="layout.js"></script>
   <script src="app.js"></script>
 </body>

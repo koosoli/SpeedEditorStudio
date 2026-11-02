@@ -190,7 +190,7 @@ function renderTopbar() {
   $("profilePath").textContent = S.path;
   const save = $("saveBtn");
   save.disabled = !dirty() || !!S.error;
-  save.textContent = dirty() ? "Save •" : "Save";
+  $("saveLabel").textContent = dirty() ? "Save •" : "Save";
   $("revertBtn").disabled = !dirty();
   $("learnBtn").classList.toggle("on", S.learn);
   $("connectToggle").checked = S.connected;
@@ -626,12 +626,17 @@ function actionSection(title, current, onSet, note) {
   // Resolve functions (your shortcut) and Resolve scripts share the "Resolve" choice.
   const kind = ["resolve_key", "solo_track", "select_track", "resolve_menu"].includes(actual) ? "resolve" : actual || "none";
   const box = el("div", "section");
-  box.append(el("div", "field-label", title));
+  const kinds = [["none", defaultName()], ["keys", "Shortcut"], ["resolve", "Resolve"], ["text", "Type text"], ["run", "Open a program, file or URL"]];
+  const chosen = (kinds.find(([k]) => k === kind) || kinds[0])[1];
+  box.append(el("div", "field-label", `${title} · ${chosen}`));
 
   const seg = el("div", "segmented");
-  const kinds = [["none", defaultName()], ["keys", "Shortcut"], ["resolve", "Resolve"], ["text", "Text"], ["run", "Open"]];
   for (const [k, text] of kinds) {
-    const b = el("button", k === kind ? "on" : "", text);
+    const b = el("button", "kind-btn" + (k === kind ? " on" : ""));
+    const iconName = k === "none" ? (defaultName() === "DaVinci" ? "davinci" : "none") : k;
+    b.append(icon(iconName));
+    b.title = text;
+    b.setAttribute("aria-label", text);
     b.onclick = () => {
       if (k === kind) return;
       if (k === "none") return onSet(null);
@@ -879,7 +884,8 @@ function renderPalette() {
     b.onclick = () => { S.assignTo = k; renderPalette(); };
     seg.append(b);
   }
-  $("assignTo").replaceChildren(el("span", "palette-tip", "Assign to"), seg);
+  seg.title = "Assign actions to the press or the long press of the key";
+  $("assignTo").replaceChildren(seg);
   const q = S.search.trim().toLowerCase();
   const target = S.selected && S.selected !== "wheel" && !isPageKey(S.selected) ? S.selected : null;
   const items = paletteGroups()
@@ -889,8 +895,13 @@ function renderPalette() {
   $("paletteItems").replaceChildren(...items.map(i => {
     const chip = el("button", "chip");
     chip.draggable = true;
-    chip.append(el("span", "chip-name", i.name));
     const kind = actionKind(i.action);
+    const head = el("span", "chip-head");
+    const iconName = kind === "resolve" ? "script" : kind === "resolve_menu" ? "menu"
+      : kind === "solo_track" || kind === "select_track" ? "tracks"
+      : kind === "resolve_key" ? "resolve" : kind;
+    head.append(icon(iconName, 14), el("span", "chip-name", i.name));
+    chip.append(head);
     const detail = kind === "keys" ? prettyShortcut(i.action.keys)
       : kind === "text" ? "types " + i.action.text
       : kind === "resolve" ? "Resolve script · " + (RESOLVE_COMMANDS.find(c => c.id === i.action.resolve) || {}).group
@@ -898,9 +909,9 @@ function renderPalette() {
       : kind === "solo_track" || kind === "select_track" ? "Resolve · Tracks"
       : kind === "resolve_menu" ? "Resolve menu · " + i.action.resolve_menu.split(">")[0].trim()
       : i.action.run;
-    chip.append(el("span", "chip-detail", detail));
+    if (kind === "keys") chip.append(el("span", "chip-detail", detail));
     if (["resolve", "resolve_key", "solo_track", "select_track", "resolve_menu"].includes(kind)) chip.classList.add("resolve");
-    chip.title = target ? `Assign to ${KEY_LABELS[target]}` : "Drag onto a key, or select a key first";
+    chip.title = `${i.name} · ${detail}\n` + (target ? `Click to assign to ${KEY_LABELS[target]}` : "Drag onto a key, or select a key first");
     chip.ondragstart = e => e.dataTransfer.setData("application/json", JSON.stringify(i.action));
     chip.onclick = () => { if (target) assign(target, structuredClone(i.action)); };
     return chip;
@@ -1078,6 +1089,11 @@ async function init() {
   S.savedJson = JSON.stringify(S.doc);
   await api.listen("runtime", ev => onRuntime(ev.payload));
 
+  applyIcons();
+  document.addEventListener("click", e => {
+    const menu = $("settingsMenu");
+    if (menu.open && !menu.contains(e.target)) menu.open = false;
+  });
   $("saveBtn").onclick = save;
   $("revertBtn").onclick = () => {
     S.doc = JSON.parse(S.savedJson);

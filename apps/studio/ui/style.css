@@ -124,6 +124,27 @@ select {
 
 #learnBtn.on { background: var(--page-dim); border-color: var(--page); color: var(--page); }
 
+/* Icon buttons and the settings menu in the top bar. */
+.icon { flex: none; display: block; }
+.toolbar { display: flex; align-items: center; gap: 4px; }
+.icon-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.icon-btn:disabled { opacity: .35; }
+#saveBtn { display: inline-flex; align-items: center; gap: 6px; }
+.menu { position: relative; }
+.menu > summary { list-style: none; cursor: pointer; border: 1px solid transparent; border-radius: 7px; color: var(--text); }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary:hover { background: var(--panel-2); }
+.menu[open] > summary { border-color: var(--accent); color: var(--accent); }
+.menu-body {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; min-width: 210px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 30px #000a;
+}
+/* Action types in the side panel: icons with a tooltip. */
+.kind-btn { display: inline-flex; align-items: center; justify-content: center; }
+.chip-head { display: flex; align-items: center; gap: 6px; }
+.chip .icon { opacity: .7; }
+
 /* ---------------------------------------------------------------- page tabs */
 
 .pages { display: flex; gap: 8px; padding: 12px 18px 0; }
