@@ -21,6 +21,10 @@ const ICON_PATHS = {
   run: "M14 4h6v6M20 4L10 14M18 14v6H4V6h6",
   menu: "M4 6h16M4 12h16M4 18h10",
   script: "M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14",
+  // views and layers
+  picture: "M3 6h18v12H3zM7 10h3M7 14h3M16 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0",
+  list: "M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01",
+  layer: "M12 3l9 5-9 5-9-5zM3 13l9 5 9-5",
   tracks: "M3 7h18M3 12h18M3 17h18M7 5v4M12 10v4M17 15v4",
 };
 

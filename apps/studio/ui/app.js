@@ -225,16 +225,24 @@ function renderTabs() {
     return b;
   });
   const views = el("div", "segmented layer-switch view-switch");
-  for (const [k, text] of [["picture", "Picture"], ["list", "All mappings"]]) {
-    const b = el("button", S.view === k ? "on" : "", text);
+  for (const [k, text] of [["picture", "Picture of the device"], ["list", "All mappings"]]) {
+    const b = el("button", "icon-seg" + (S.view === k ? " on" : ""));
+    b.append(icon(k));
+    b.title = text;
+    b.setAttribute("aria-label", text);
     b.onclick = () => { S.view = k; render(); };
     views.append(b);
   }
   tabs.push(el("div", "spacer"), views);
   if (modifiers().length && S.view === "picture") {
     const seg = el("div", "segmented layer-switch");
-    for (const [k, text] of [["base", "Keys"], ...modifiers().map(m => [m, `${keyLabel(m)} + key`])]) {
-      const b = el("button", activeLayer() === k ? "on" : "", text);
+    for (const k of ["base", ...modifiers()]) {
+      // Keys: a keyboard icon. A layer: the layer icon and the held key's name.
+      const b = el("button", "icon-seg" + (k === "base" ? "" : " fn") + (activeLayer() === k ? " on" : ""));
+      b.append(icon(k === "base" ? "keys" : "layer"));
+      if (k !== "base") b.append(el("span", null, keyLabel(k)));
+      b.title = k === "base" ? "Keys" : `${keyLabel(k)} + key: hold ${keyLabel(k)} and press another key`;
+      b.setAttribute("aria-label", b.title);
       b.onclick = () => { S.layer = k; render(); };
       seg.append(b);
     }

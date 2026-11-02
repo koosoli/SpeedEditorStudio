@@ -157,7 +157,8 @@ select {
 .pages .spacer { flex: 1; }
 .layer-switch { align-self: center; margin-bottom: 6px; }
 .layer-switch button { padding: 6px 14px; }
-.layer-switch button.on:last-child { background: #3b2a5c; color: #c9a8ff; }
+.layer-switch button.fn.on { background: #3b2a5c; color: #c9a8ff; }
+.segmented .icon-seg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
 .device.fn { background: linear-gradient(#332d40, #2a2535); border-color: #5a4884; }
 .device.fn .key.mapped { background: #2e2445; border-color: #6a4fa0; }
 .device.fn .key.mapped .act { color: #c9a8ff; }
@@ -367,10 +368,12 @@ select {
 .chip-detail { font-size: 11px; color: var(--muted); }
 
 .log {
-  padding: 7px 18px;
-  background: linear-gradient(#15181d, #0b0d10);
-  border-top: 1px solid #262a31;
-  box-shadow: inset 0 10px 14px -10px #000c, inset 0 1px 0 #ffffff08;
+  margin: 0 14px 12px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  background: linear-gradient(#07080a, #101318);
+  border: 1px solid #2b3039;
+  box-shadow: inset 0 3px 10px #000e, inset 0 -1px 0 #ffffff0a, 0 1px 0 #ffffff0d;
   color: #8f97a3;
   font: 11.5px/1.5 "Cascadia Mono", Consolas, ui-monospace, monospace;
   min-height: 30px;
@@ -417,7 +420,7 @@ select {
 @media (max-height: 780px) {
   .palette-items { max-height: 54px; }
   .palette-head { margin-bottom: 6px; }
-  .log { min-height: 0; padding: 3px 12px; }
+  .log { min-height: 0; padding: 4px 12px; margin-bottom: 8px; }
 }
 
 @media (max-height: 640px) {
