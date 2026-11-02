@@ -159,6 +159,10 @@ pub struct Engine {
     /// (CUT + CAM, DIS + CAM) take only that part of the track until it is
     /// toggled off again.
     track_scope: TrackScope,
+    /// Fn + CLOSE UP: Resolve's Trim tool (TRIM IN/OUT ripple the timeline)
+    /// instead of the Selection tool (they leave a gap); CLOSE UP lights.
+    /// Resolve doesn't report its tool, so this is what was last chosen here.
+    trim_tool: bool,
     /// Pass-through to an emulated Speed Editor in Resolve.
     passthrough: bool,
     /// Keys held as native keys (pass-through), and what was last sent.
@@ -194,6 +198,7 @@ impl Engine {
             gestures: Gestures::default(),
             solo_track: 0,
             track_scope: TrackScope::Both,
+            trim_tool: false,
             passthrough: false,
             native_held: Vec::new(),
             sent_native: Vec::new(),
@@ -422,6 +427,7 @@ impl Engine {
                             None => self.native(key, &mut out),
                             Some(m) if Some(m) == self.profile.fn_key => match key {
                                 Key::VideoOnly | Key::AudioOnly => self.arm_track_scope(key),
+                                Key::CloseUp => self.toggle_trim_tool(&mut out),
                                 _ => self.native_fn_press(key, &mut out),
                             },
                             Some(_) => {}
@@ -708,13 +714,29 @@ impl Engine {
         }
     }
 
-    /// The LED of VIDEO ONLY / AUDIO ONLY while it is toggled on.
+    /// LEDs of the app's DaVinci-page toggles: VIDEO ONLY / AUDIO ONLY, and
+    /// CLOSE UP for the Trim tool.
     fn scope_led(&self) -> u32 {
-        match self.track_scope {
+        let scope = match self.track_scope {
             TrackScope::Both => 0,
             TrackScope::Video => Key::VideoOnly.led().unwrap_or(0),
             TrackScope::Audio => Key::AudioOnly.led().unwrap_or(0),
-        }
+        };
+        let trim = if self.trim_tool { Key::CloseUp.led().unwrap_or(0) } else { 0 };
+        scope | trim
+    }
+
+    /// Fn + CLOSE UP: switches Resolve between the Trim tool (trims ripple)
+    /// and the Selection tool (trims leave a gap).
+    fn toggle_trim_tool(&mut self, out: &mut Vec<Output>) {
+        self.trim_tool = !self.trim_tool;
+        let (command, text) = if self.trim_tool {
+            ("editTrim", "Trim tool: TRIM IN/OUT ripple the timeline")
+        } else {
+            ("editPointer", "Selection tool: TRIM IN/OUT leave a gap")
+        };
+        out.push(Output::ResolveKey(command.into()));
+        out.push(Output::Status(text.into()));
     }
 
     /// LEDs the app controls in pass-through; Resolve sets the rest.
@@ -726,7 +748,7 @@ impl Engine {
             Mode::Normal => 0,
             Mode::Custom if self.profile.pages[self.page].davinci_defaults => {
                 // VIDEO ONLY / AUDIO ONLY are the app's toggles on DaVinci pages.
-                let scope = led(&Key::VideoOnly) | led(&Key::AudioOnly);
+                let scope = led(&Key::VideoOnly) | led(&Key::AudioOnly) | led(&Key::CloseUp);
                 page_keys | self.profile.fn_key.as_ref().map_or(0, led) | self.solo_led() | scope
             }
             // A page of the app's own: all LEDs are the app's.
@@ -1333,6 +1355,23 @@ mod tests {
         e.on_keys(&[]);
         e.on_keys(&[CUT]);
         assert!(has(&e.on_keys(&[CUT, CAM1]), &Output::SoloTrack { track: 1, video: true, audio: true }));
+    }
+
+    #[test]
+    fn fn_close_up_toggles_the_trim_tool() {
+        let mut e = davinci_fn_engine();
+        e.on_keys(&[CUT]);
+        let out = e.on_keys(&[CUT, Key::CloseUp.code()]);
+        assert!(has(&out, &Output::ResolveKey("editTrim".into())));
+        e.on_keys(&[]);
+        assert_ne!(e.desired_leds_for_test() & Key::CloseUp.led().unwrap(), 0, "CLOSE UP lights");
+        e.on_keys(&[CUT]);
+        assert!(has(&e.on_keys(&[CUT, Key::CloseUp.code()]), &Output::ResolveKey("editPointer".into())));
+        e.on_keys(&[]);
+        assert_eq!(e.desired_leds_for_test() & Key::CloseUp.led().unwrap(), 0);
+        // CLOSE UP on its own keeps its native function.
+        let out = e.on_keys(&[Key::CloseUp.code()]);
+        assert!(!has(&out, &Output::ResolveKey("editTrim".into())));
     }
 
     #[test]

@@ -25,7 +25,8 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+  font: 13.5px/1.45 "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
@@ -189,8 +190,11 @@ select {
   overflow: hidden;
   transition: transform .05s, border-color .1s, background .1s;
 }
-.key .cap { font-size: 10px; font-weight: 700; letter-spacing: .03em; text-align: center; line-height: 1.15; }
-.key .act { font-size: 10.5px; color: var(--accent); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 14px; }
+.key .cap { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-align: center; line-height: 1.15; }
+/* Keys without a Resolve keyboard command: dimmed until you map them. */
+.key.no-native:not(.mapped) .cap, .key.no-native:not(.mapped) .alt { opacity: .45; }
+.key .act { font-size: 10.5px; font-weight: 500; color: var(--accent); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.key .act:empty { display: none; }
 .key .alt { font-size: 9.5px; font-weight: 600; color: #8a919c; letter-spacing: .03em; margin-top: -2px; }
 .key .act.default { color: #6c737d; font-style: italic; }
 .key .hold { font-size: 9.5px; color: #e5c07a; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -269,7 +273,7 @@ select {
 .chip.resolve { border-left: 3px solid #8a7550; }
 .chip.resolve .chip-detail { color: #b9b1a2; }
 
-.hint { margin: 0; color: var(--muted); }
+.hint { margin: 0; color: var(--muted); font-size: 12.5px; text-align: center; }
 .hint.error { color: var(--error); }
 .hint.normal { color: var(--page); border: 1px solid var(--page-dim); background: #2a2214; border-radius: 6px; padding: 6px 12px; }
 
@@ -282,7 +286,7 @@ select {
   display: flex; flex-direction: column; gap: 14px;
   overflow: auto;
 }
-.insp-head h2 { margin: 0; font-size: 18px; }
+.insp-head h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 .insp-head .sub { color: var(--muted); margin-top: 2px; }
 .info { margin: 0; color: var(--muted); }
 /* Explanations show only after "?" (top right of the panel). */
@@ -295,7 +299,7 @@ select {
 .inspector.help .help-toggle { color: var(--accent); border-color: var(--accent); }
 .insp-head { padding-right: 34px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 .note { font-size: 12px; color: var(--muted); }
 .note.error { color: var(--error); }
 .note.error:empty { display: none; }
@@ -307,7 +311,14 @@ select {
 .segmented button + button { border-left: 1px solid var(--line); }
 .segmented button.on { background: var(--accent-dim); color: var(--accent); }
 
-.section { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.section { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+/* Switches in the side panel may wrap. */
+.inspector .switch { white-space: normal; align-items: flex-start; line-height: 1.3; }
+.inspector .switch .track { flex: none; margin-top: 1px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 12px; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.pill b { color: var(--text); font-weight: 600; }
+.panel-foot { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
 .segmented.compact button { padding: 4px 10px; font-size: 12px; }
 .assign-to { display: flex; align-items: center; gap: 8px; }
 

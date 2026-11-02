@@ -205,7 +205,9 @@ function renderTopbar() {
       ? `Normal mode on the device: your mappings are off and CUT, DIS and SMTH CUT work as transition keys. Press ${chordText()} together to switch the mappings back on.`
     : S.learn
       ? "Learn: press a key on the Speed Editor to select it."
-      : `Press ${chordText()} together on the device to switch mappings off and on.`;
+      : page().davinci_defaults
+        ? `Plain keys keep their DaVinci function · dimmed keys have none until you map them · ${chordText()}: mappings off/on`
+        : `${chordText()} together: mappings off/on`;
 }
 
 function chordText() {
@@ -310,15 +312,15 @@ function keyButton(id, label, span, opts) {
   const isModifier = modifiers().includes(id);
   if (isModifier) b.classList.add("fn-key");
   if (pageIndex >= 0) {
-    const fnNote = isModifier
-      ? (activeLayer() === id ? "Held: + key" : `Page ${pageIndex + 1} · hold: + key`)
-      : `Page ${pageIndex + 1}`;
+    const fnNote = isModifier && activeLayer() === id ? "held" : `Page ${pageIndex + 1}`;
     b.append(el("span", "act", fnNote));
   } else {
     const wheelMode = page().wheel && page().wheel.davinci && !fnLayer() && ["jog", "shuttle", "scroll"].includes(id);
     const text = wheelMode ? "Wheel mode" : (m && m.label) || describeAction(press);
-    const fallback = defaultName() === "DaVinci" ? (NATIVE_KEYS.has(id) ? "DaVinci" : "—") : "";
-    b.append(el("span", "act" + (text ? "" : " default"), text || fallback));
+    // Keys doing their native job show nothing extra (see the legend below
+    // the device); keys without a Resolve command are dimmed.
+    if (!text && defaultName() === "DaVinci" && !NATIVE_KEYS.has(id)) b.classList.add("no-native");
+    b.append(el("span", "act", text));
     if (m && m.hold) b.append(el("span", "hold", "hold: " + describeAction(m.hold)));
   }
   b.onclick = () => select(id);
@@ -357,8 +359,10 @@ function allMappings() {
     }
     if (p.wheel) {
       const w = p.wheel;
-      const text = w.scroll ? (w.scroll.horizontal ? "Scroll sideways" : "Scroll")
-        : `${describeAction({ keys: w.keys.left })} / ${describeAction({ keys: w.keys.right })}`;
+      const text = w.davinci ? "DaVinci wheel (JOG · SHTL · SCRL)"
+        : w.scroll ? (w.scroll.horizontal ? "Scroll sideways" : "Scroll")
+        : w.keys ? `${describeAction({ keys: w.keys.left })} / ${describeAction({ keys: w.keys.right })}`
+        : "Wheel";
       rows.push({ pageIndex, layer: "base", id: "wheel", part: "wheel", trigger: "Jog wheel", text });
     }
   });
@@ -380,8 +384,9 @@ function renderList() {
       const selected = S.page === i && S.selected === r.id && (r.id === "wheel" || activeLayer() === r.layer);
       if (selected) row.classList.add("selected");
       row.append(el("span", "trigger" + (r.layer !== "base" ? " fn" : ""), r.trigger));
-      row.append(el("span", "what", r.text || describeAction(r.action)));
-      row.append(el("span", "row-label", r.label || ""));
+      const what = r.text || describeAction(r.action);
+      row.append(el("span", "what", what));
+      row.append(el("span", "row-label", r.label && r.label !== what ? r.label : ""));
       const del = el("button", "ghost small", "Remove");
       del.title = "Remove this mapping";
       del.onclick = e => {
@@ -478,18 +483,26 @@ function pageSettings() {
   name.onchange = () => { page().name = name.value; changed(); };
   const pageKey = KEY_LABELS[S.doc.page_keys[S.page]];
   const count = Object.keys(page().keys).length;
-  const layerCounts = modifiers().map(m => `${keyLabel(m)} + key: ${Object.keys(layerKeys(page(), m)).length}`).join(", ");
+  const pill = (n, text) => {
+    const p = el("span", "pill");
+    p.append(el("b", null, String(n)), document.createTextNode(" " + text));
+    return p;
+  };
+  const counts = el("div", "pills");
+  counts.append(pill(count, "keys"), ...modifiers().map(m => pill(Object.keys(layerKeys(page(), m)).length, `${keyLabel(m)} + key`)));
+  const mappings = el("div", "section");
+  mappings.append(el("div", "field-label", "Mappings on this page"), counts,
+    el("p", "info", `Click a key on the picture, or turn on Learn and press it on the device. Hold ${modifiers().map(keyLabel).join(", ") || "a modifier"} and press another key for the combinations; pick the layer above the picture to edit them. A quick tap still opens their page.`));
+  const foot = el("div", "panel-foot");
+  foot.append(resetButton());
   return [
-    heading(`Page ${S.page + 1}`, `Selected with ${pageKey} on the device`),
-    field("Page name", name),
-    el("p", "info", `${count} key${count === 1 ? "" : "s"} customised on this page. Click a key on the picture, or turn on Learn and press it on the device.`),
-    modifiers().length
-      ? el("p", "info", `Combinations (${layerCounts}). Hold ${modifiers().map(keyLabel).join(", ")} and press another key to use them; pick the layer above to edit it. A quick tap of these keys still opens their page.`)
-      : el("span"),
+    heading(`Page ${S.page + 1}`, `${pageKey} key`),
+    field("Name", name),
+    mappings,
     davinciDefaultsSwitch(),
     el("p", "info", `The active page's key blinks. ${chordText()} together switches to normal mode: every key and the wheel do their native DaVinci job (the three lights flash, then work as transition keys). Press them again to come back.`),
     resolveSetup(),
-    resetButton(),
+    foot,
   ];
 }
 
@@ -503,7 +516,7 @@ function davinciDefaultsSwitch() {
     else delete page().davinci_defaults;
     changed();
   };
-  box.append(input, el("span", "track"), el("span", null, "Uncustomised keys keep their DaVinci function"));
+  box.append(input, el("span", "track"), el("span", null, "Keep DaVinci functions on unmapped keys"));
   const wrap = el("div", "section");
   wrap.append(box, el("p", "info",
     "Marked “DaVinci” on the picture. Keys marked “—” have no Resolve keyboard command, so they do nothing until you map them. "
@@ -513,7 +526,7 @@ function davinciDefaultsSwitch() {
 
 function resolveSetup() {
   const box = el("div", "section");
-  box.append(el("div", "field-label", "DaVinci Resolve actions"));
+  box.append(el("div", "field-label", "DaVinci Resolve"));
   box.append(el("p", "info", "Resolve actions run Resolve's own functions directly, so they work whatever your Resolve keyboard shortcuts are. Resolve must be open, with Preferences › System › General › “External scripting using” set to Local."));
   const b = el("button", "ghost small", "Test connection to Resolve");
   b.onclick = async () => {
@@ -550,7 +563,7 @@ function pageKeyInfo(id) {
     heading(KEY_LABELS[id], `Page key ${index + 1}`),
     el("p", "info", `Releasing ${KEY_LABELS[id]} opens page ${index + 1} “${S.doc.pages[index].name}”. Page keys can't have their own action.`),
     id === S.doc.fn_key
-      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their action in the “${KEY_LABELS[id]} + key” layer. On a DaVinci page, ${KEY_LABELS[id]} + wheel zooms the timeline. VIDEO ONLY or AUDIO ONLY pressed on its own (it lights up; press again to switch off) makes track choices such as CUT + CAM and DIS + CAM take only the video or only the audio. With mappings off it is the normal transition.`)
+      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their action in the “${KEY_LABELS[id]} + key” layer. On a DaVinci page, ${KEY_LABELS[id]} + wheel zooms the timeline, and ${KEY_LABELS[id]} + CLOSE UP switches Resolve between the Trim tool (TRIM IN/OUT ripple; CLOSE UP lights) and the Selection tool (they leave a gap). VIDEO ONLY or AUDIO ONLY pressed on its own (it lights up; press again to switch off) makes track choices such as CUT + CAM and DIS + CAM take only the video or only the audio. With mappings off it is the normal transition.`)
       : modifierSwitch(id),
     inChord ? el("p", "info", `It's part of the on/off combination: ${chordText()}.`) : el("span"),
   ];
