@@ -876,6 +876,13 @@ function stopRecording() {
 
 // ---------------------------------------------------------------- palette
 
+// The action list is folded away until you open it; it remembers the choice.
+function showActions() {
+  $("palette").classList.toggle("open", !!S.actionsOpen);
+  $("paletteToggle").setAttribute("aria-expanded", String(!!S.actionsOpen));
+  $("paletteToggle").title = S.actionsOpen ? "Hide the actions" : "Show the actions you can drag onto a key";
+}
+
 function renderPalette() {
   const groups = ["All", ...paletteGroups().map(g => g.group)];
   $("paletteGroups").replaceChildren(...groups.map(g => {
@@ -1083,6 +1090,7 @@ function savePrefs() {
   try {
     localStorage.setItem("studio-prefs", JSON.stringify({
       connected: S.connected, active: S.active, yieldToResolve: S.yieldToResolve, help: !!S.help,
+      actions: !!S.actionsOpen,
     }));
   } catch {
     // Storage unavailable: the app still works, it just won't remember.
@@ -1102,6 +1110,7 @@ async function init() {
     const menu = $("settingsMenu");
     if (menu.open && !menu.contains(e.target)) menu.open = false;
   });
+  $("paletteToggle").onclick = () => { S.actionsOpen = !S.actionsOpen; savePrefs(); showActions(); };
   $("saveBtn").onclick = save;
   $("revertBtn").onclick = () => {
     S.doc = JSON.parse(S.savedJson);
@@ -1174,6 +1183,8 @@ async function init() {
   S.active = !!prefs.active;
   S.yieldToResolve = !!prefs.yieldToResolve;
   S.help = !!prefs.help;
+  S.actionsOpen = !!prefs.actions;
+  showActions();
   $("yieldToggle").checked = S.yieldToResolve;
   if (prefs.connected && window.__TAURI__) await setConnected(true);
   $("paletteSearch").oninput = e => { S.search = e.target.value; renderPalette(); };

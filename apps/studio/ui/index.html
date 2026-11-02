@@ -56,9 +56,11 @@
     <aside class="inspector" id="inspector"></aside>
   </main>
 
-  <section class="palette">
+  <section class="palette" id="palette">
     <div class="palette-head">
-      <h2 title="Drag onto a key, or select a key and click">Actions</h2>
+      <button id="paletteToggle" class="palette-toggle ghost" aria-expanded="false" title="Show the actions you can drag onto a key">
+        <span class="chev" data-icon="chevron"></span><h2>Actions</h2>
+      </button>
       <div class="palette-groups" id="paletteGroups"></div>
       <input id="paletteSearch" type="search" placeholder="Search actions…">
       <div class="assign-to" id="assignTo"></div>
