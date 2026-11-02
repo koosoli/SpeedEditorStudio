@@ -428,6 +428,9 @@ impl Engine {
                             Some(m) if Some(m) == self.profile.fn_key => match key {
                                 Key::VideoOnly | Key::AudioOnly => self.arm_track_scope(key),
                                 Key::CloseUp => self.toggle_trim_tool(&mut out),
+                                // The source viewer's Source Clip / Source Tape
+                                // switch (View menu), also on the Edit page.
+                                Key::Source => out.push(Output::ResolveKey("viewViewerSourceModeToggle".into())),
                                 _ => self.native_fn_press(key, &mut out),
                             },
                             Some(_) => {}
@@ -1372,6 +1375,18 @@ mod tests {
         // CLOSE UP on its own keeps its native function.
         let out = e.on_keys(&[Key::CloseUp.code()]);
         assert!(!has(&out, &Output::ResolveKey("editTrim".into())));
+    }
+
+    #[test]
+    fn fn_source_switches_source_clip_and_tape() {
+        let mut e = davinci_fn_engine();
+        e.on_keys(&[CUT]);
+        let out = e.on_keys(&[CUT, Key::Source.code()]);
+        assert!(has(&out, &Output::ResolveKey("viewViewerSourceModeToggle".into())));
+        e.on_keys(&[]);
+        // SOURCE on its own keeps its native function.
+        let out = e.on_keys(&[Key::Source.code()]);
+        assert!(!has(&out, &Output::ResolveKey("viewViewerSourceModeToggle".into())));
     }
 
     #[test]

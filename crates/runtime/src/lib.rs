@@ -172,8 +172,6 @@ struct Loop<F> {
     pass_through: bool,
     virtual_device: Option<virtual_device::VirtualDevice>,
     last_jog: [u8; 7],
-    /// The native keys last handed to Resolve (key codes).
-    native_sent: Vec<u16>,
     commands: Receiver<Command>,
     on_event: F,
     clock: Instant,
@@ -199,7 +197,6 @@ impl<F: Fn(Event)> Loop<F> {
             pass_through: options.pass_through,
             virtual_device: None,
             last_jog: [3, 0, 0, 0, 0, 0, 0xff],
-            native_sent: Vec::new(),
             commands,
             on_event,
             clock: Instant::now(),
@@ -714,21 +711,6 @@ impl<F: Fn(Event)> Loop<F> {
         }
     }
 
-    /// SOURCE opens the Source Tape on the Cut page. On the Edit page Resolve
-    /// only switches to the source viewer, so the app also switches that
-    /// viewer between Source Clip and Source Tape, as on the Cut page.
-    fn source_on_edit_page(&mut self) {
-        match self.resolve.request("current_page", &Default::default(), Duration::from_secs(1)) {
-            Ok(page) if page.trim() == "edit" => {
-                if let Err(e) = self.press_resolve_command("viewViewerSourceModeToggle") {
-                    (self.on_event)(Event::Status(format!("Resolve: {e}")));
-                }
-            }
-            Ok(_) => {}
-            Err(e) => self.debug(format_args!("reading Resolve's page failed: {e}")),
-        }
-    }
-
     fn apply(&mut self, outputs: Vec<Output>, controller: &Controller) -> Result<(), String> {
         for o in outputs {
             self.debug(format_args!("{}{o:?}", if self.active { "" } else { "(inactive) " }));
@@ -749,12 +731,6 @@ impl<F: Fn(Event)> Loop<F> {
                 Output::NativeKeys(codes) if codes.is_empty() || self.active => {
                     if let Some(device) = &self.virtual_device {
                         device.emulator.send_input(&key_report(&codes));
-                    }
-                    let source = Key::Source.code();
-                    let source_pressed = codes.contains(&source) && !self.native_sent.contains(&source);
-                    self.native_sent = codes;
-                    if source_pressed {
-                        self.source_on_edit_page();
                     }
                 }
                 Output::NativeKeys(_) => {}

@@ -156,10 +156,6 @@ class Bridge:
     def cmd_ping(self, p):
         return "Connected to DaVinci Resolve " + str(self.resolve().GetVersionString())
 
-    def cmd_current_page(self, p):
-        # "media", "cut", "edit", "fusion", "color", "fairlight" or "deliver".
-        return str(self.resolve().GetCurrentPage())
-
     def cmd_page(self, p):
         check(self.resolve().OpenPage(p["page"]), "open the page")
         return f"{p['page'].capitalize()} page"
