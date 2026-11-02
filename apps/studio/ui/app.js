@@ -205,6 +205,8 @@ function renderTopbar() {
       ? `Normal mode on the device: your mappings are off and CUT, DIS and SMTH CUT work as transition keys. Press ${chordText()} together to switch the mappings back on.`
     : S.learn
       ? "Learn: press a key on the Speed Editor to select it."
+    : fnLayer() && !modifiers().some(m => S.held.has(m))
+      ? `Editing the ${keyLabel(activeLayer())} + key layer · choose “Keys” above the picture to go back`
       : page().davinci_defaults
         ? `Plain keys keep their DaVinci function · dimmed keys have none until you map them · ${chordText()}: mappings off/on`
         : `${chordText()} together: mappings off/on`;
@@ -261,7 +263,9 @@ function renderDevice() {
     host.replaceChildren(...nodes);
   }
 
-  $("device").classList.toggle("fn", fnLayer());
+  // Purple only while a function key is held on the device; a layer picked
+  // above the picture for editing keeps the normal colours.
+  $("device").classList.toggle("fn", modifiers().some(m => S.held.has(m)));
   const w = page().wheel;
   $("wheelLabel").textContent = !w ? "Wheel: nothing"
     : w.davinci ? "DaVinci: JOG · SHTL · SCRL"
