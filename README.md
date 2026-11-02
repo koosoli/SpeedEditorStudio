@@ -49,9 +49,6 @@ Resolve.**
 - **Trim with or without ripple.** CUT + CLOSE UP switches Resolve to the Trim tool (CLOSE UP
   lights; TRIM IN/OUT ripple the timeline) and back to the Selection tool (trims leave a gap).
   CLOSE UP on its own keeps its native function.
-- **Source Tape on the Edit page.** CUT + SOURCE switches the source viewer between Source
-  Clip and Source Tape (Resolve's *View › Source Clip/Source Tape*). SOURCE on its own
-  keeps its native function.
 - **Select a clip on a certain track.** DIS + CAM 1–8 selects the clip under the playhead on
   that track, with its linked sound, using Resolve's own selection keys.
 - **Video or audio only.** VIDEO ONLY or AUDIO ONLY pressed on its own lights up and makes
