@@ -55,8 +55,9 @@ fn vk(name: &str) -> Option<u16> {
     Some(match name {
         "ctrl" | "control" => 0x11,
         "shift" => 0x10,
-        "alt" => 0x12,
-        "win" | "super" => 0x5b,
+        "alt" | "option" | "opt" => 0x12,
+        // The Windows key; on macOS the Command key (⌘).
+        "win" | "super" | "cmd" | "command" | "meta" => 0x5b,
         "enter" | "return" => 0x0d,
         "esc" | "escape" => 0x1b,
         "tab" => 0x09,

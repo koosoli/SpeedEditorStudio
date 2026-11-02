@@ -13,8 +13,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::collections::BTreeMap;
+#[cfg(windows)]
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
+#[cfg(windows)]
 use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -34,9 +36,15 @@ const EXAMPLE_PROFILE: &str = include_str!("../../../profiles/example.toml");
 /// Started with this argument (by "Start with Windows"), the window stays hidden.
 const HIDDEN_ARG: &str = "--hidden";
 const TRAY_ID: &str = "main";
+#[cfg(windows)]
 const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
+#[cfg(windows)]
 const RUN_VALUE: &str = "Speed Editor Studio";
+#[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+/// macOS: the LaunchAgent that starts the app at login (untested, see README).
+#[cfg(target_os = "macos")]
+const LAUNCH_AGENT: &str = "io.github.openspeededitor.studio";
 
 struct AppState {
     path: PathBuf,
@@ -86,8 +94,13 @@ struct Loaded {
 
 /// Profile location: %APPDATA%\OpenSpeedEditor\profile.toml
 fn profile_path() -> PathBuf {
-    let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
-    base.join("OpenSpeedEditor").join("profile.toml")
+    // Windows: %APPDATA%; macOS: ~/Library/Application Support.
+    let base = if cfg!(target_os = "macos") {
+        std::env::var_os("HOME").map(|h| PathBuf::from(h).join("Library").join("Application Support"))
+    } else {
+        std::env::var_os("APPDATA").map(PathBuf::from)
+    };
+    base.unwrap_or_else(|| PathBuf::from(".")).join("OpenSpeedEditor").join("profile.toml")
 }
 
 #[tauri::command]
@@ -224,11 +237,13 @@ fn disconnect(app: AppHandle, state: State<AppState>) {
 }
 
 /// Whether the app starts with Windows (hidden, in the tray).
+#[cfg(windows)]
 #[tauri::command]
 fn autostart_enabled() -> bool {
     reg(&["query", RUN_KEY, "/v", RUN_VALUE]).is_ok()
 }
 
+#[cfg(windows)]
 #[tauri::command]
 fn set_autostart(enabled: bool) -> Result<(), String> {
     if enabled {
@@ -242,7 +257,54 @@ fn set_autostart(enabled: bool) -> Result<(), String> {
     }
 }
 
+/// macOS: whether the LaunchAgent exists that starts the app at login.
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn autostart_enabled() -> bool {
+    launch_agent_path().is_some_and(|p| p.is_file())
+}
+
+/// macOS: writes or removes a LaunchAgent that starts the app hidden at login.
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn set_autostart(enabled: bool) -> Result<(), String> {
+    let path = launch_agent_path().ok_or("no home folder")?;
+    if !enabled {
+        return match std::fs::remove_file(&path) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
+            _ => Ok(()),
+        };
+    }
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let escape = |t: &str| t.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;");
+    let plist = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>{LAUNCH_AGENT}</string>
+  <key>ProgramArguments</key>
+  <array><string>{}</string><string>{HIDDEN_ARG}</string></array>
+  <key>RunAtLoad</key><true/>
+</dict>
+</plist>
+"#,
+        escape(&exe.display().to_string())
+    );
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&path, plist).map_err(|e| e.to_string())
+}
+
+#[cfg(target_os = "macos")]
+fn launch_agent_path() -> Option<PathBuf> {
+    let home = std::env::var_os("HOME")?;
+    Some(PathBuf::from(home).join("Library/LaunchAgents").join(format!("{LAUNCH_AGENT}.plist")))
+}
+
 /// Runs reg.exe on the current user's registry.
+#[cfg(windows)]
 fn reg(args: &[&str]) -> Result<(), String> {
     let status = Command::new("reg")
         .args(args)

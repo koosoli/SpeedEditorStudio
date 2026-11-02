@@ -1,0 +1,43 @@
+# Builds Speed Editor Studio for macOS (Apple Silicon and Intel) and runs the
+# tests on a real Mac. The macOS version is UNTESTED with a Speed Editor and
+# DaVinci Resolve; this only proves it compiles. Started by hand
+# (Actions › macOS build › Run workflow), because macOS minutes are limited.
+name: macOS build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Tests
+        run: cargo test --workspace
+
+      - name: App icon for macOS (icon.icns)
+        working-directory: apps/studio
+        run: npx --yes @tauri-apps/cli@2 icon icons/icon.png --output icons
+
+      - name: Build the app (universal)
+        working-directory: apps/studio
+        run: >
+          npx --yes @tauri-apps/cli@2 build --target universal-apple-darwin --bundles app
+          --config '{"bundle":{"active":true,"icon":["icons/icon.icns","icons/icon.png"]}}'
+
+      - name: Zip the app
+        run: |
+          cd target/universal-apple-darwin/release/bundle/macos
+          ditto -c -k --keepParent "Speed Editor Studio.app" "$GITHUB_WORKSPACE/SpeedEditorStudio-macos-universal.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpeedEditorStudio-macos-universal
+          path: SpeedEditorStudio-macos-universal.zip

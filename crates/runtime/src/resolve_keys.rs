@@ -1,5 +1,6 @@
 //! The user's DaVinci Resolve keyboard layout: which shortcut runs which
-//! Resolve command, and how to type it on the current Windows keyboard.
+//! Resolve command, and how to type it on the current keyboard (Windows or
+//! macOS; the macOS part is untested, see README).
 //!
 //! Resolve writes shortcuts by the character on the key ("Ctrl+Shift+[",
 //! "#"), so single characters are converted with the active keyboard layout
@@ -9,11 +10,20 @@ use std::collections::HashMap;
 
 use mapper::keyboard::Shortcut;
 use mapper::native::DEFAULT_SHORTCUTS;
+#[cfg(windows)]
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::VkKeyScanW;
 
 const VK_SHIFT: u16 = 0x10;
 const VK_CONTROL: u16 = 0x11;
 const VK_MENU: u16 = 0x12;
+/// The Windows key; on macOS the Command key.
+#[cfg(not(windows))]
+const VK_LWIN: u16 = 0x5b;
+/// Resolve's macOS layouts write Cmd where the Windows ones write Ctrl.
+#[cfg(windows)]
+const VK_CMD: u16 = VK_CONTROL;
+#[cfg(not(windows))]
+const VK_CMD: u16 = VK_LWIN;
 
 pub struct KeyLayout {
     commands: HashMap<String, Vec<String>>,
@@ -80,9 +90,10 @@ fn parse_spec_extra(spec: &str) -> Option<(Shortcut, bool)> {
     let mut extra = false;
     for m in mods.split('+').filter(|m| !m.is_empty()) {
         keys.push(match m.to_ascii_lowercase().as_str() {
-            "ctrl" | "cmd" => VK_CONTROL,
+            "ctrl" | "control" => VK_CONTROL,
+            "cmd" | "command" => VK_CMD,
             "shift" => VK_SHIFT,
-            "alt" | "option" => VK_MENU,
+            "alt" | "option" | "opt" => VK_MENU,
             _ => return None,
         });
     }
@@ -100,13 +111,9 @@ fn parse_spec_extra(spec: &str) -> Option<(Shortcut, bool)> {
             if c.encode_utf16(&mut units).len() != 1 {
                 return None;
             }
-            let scan = unsafe { VkKeyScanW(units[0]) };
-            if scan == -1 {
-                return None;
-            }
-            let (vk, state) = ((scan & 0xff) as u16, (scan >> 8) & 0xff);
-            for (bit, modifier) in [(1, VK_SHIFT), (2, VK_CONTROL), (4, VK_MENU)] {
-                if state & bit != 0 && !keys.contains(&modifier) {
+            let (vk, needs) = char_key(units[0])?;
+            for modifier in needs {
+                if !keys.contains(&modifier) {
                     keys.push(modifier);
                     extra = true;
                 }
@@ -115,6 +122,41 @@ fn parse_spec_extra(spec: &str) -> Option<(Shortcut, bool)> {
         }
     }
     Some((Shortcut { keys }, extra))
+}
+
+/// The key that types `unit` on the active keyboard layout, and the
+/// modifiers it needs (a German keyboard types "[" as AltGr+8).
+#[cfg(windows)]
+fn char_key(unit: u16) -> Option<(u16, Vec<u16>)> {
+    let scan = unsafe { VkKeyScanW(unit) };
+    if scan == -1 {
+        return None;
+    }
+    let (vk, state) = ((scan & 0xff) as u16, (scan >> 8) & 0xff);
+    let needs = [(1, VK_SHIFT), (2, VK_CONTROL), (4, VK_MENU)]
+        .into_iter()
+        .filter(|(bit, _)| state & bit != 0)
+        .map(|(_, m)| m)
+        .collect();
+    Some((vk, needs))
+}
+
+/// macOS: looked up in the current keyboard layout; the result is a Mac key
+/// code, marked with `MAC_KEY` for the output layer.
+#[cfg(target_os = "macos")]
+fn char_key(unit: u16) -> Option<(u16, Vec<u16>)> {
+    use std::sync::OnceLock;
+    static LAYOUT: OnceLock<Vec<(char, u16, u32)>> = OnceLock::new();
+    let c = char::from_u32(unit as u32)?;
+    let &(_, code, modifiers) = LAYOUT.get_or_init(crate::mac::layout_table).iter().find(|(t, ..)| *t == c)?;
+    let mut needs = Vec::new();
+    if modifiers & crate::mac::UC_SHIFT != 0 {
+        needs.push(VK_SHIFT);
+    }
+    if modifiers & crate::mac::UC_OPTION != 0 {
+        needs.push(VK_MENU);
+    }
+    Some((crate::output::MAC_KEY | code, needs))
 }
 
 fn named_key(name: &str) -> Option<u16> {
@@ -153,6 +195,7 @@ mod tests {
         assert_eq!(parse_spec("Ctrl+Shift+Left").unwrap().keys, vec![VK_CONTROL, VK_SHIFT, 0x25]);
     }
 
+    #[cfg(windows)]
     #[test]
     fn letters_use_the_keyboard_layout() {
         // Letters sit on the same virtual keys in every Latin layout.
@@ -162,7 +205,7 @@ mod tests {
 
     #[test]
     fn layout_lookup_reports_unbound_commands() {
-        let layout = KeyLayout::from_json(r#"{"preset":"X","commands":{"markIn":["I"],"editMulticamCutToAngle1":[]}}"#).unwrap();
+        let layout = KeyLayout::from_json(r#"{"preset":"X","commands":{"markIn":["F9"],"editMulticamCutToAngle1":[]}}"#).unwrap();
         assert!(layout.shortcut("markIn").is_ok());
         assert!(layout.shortcut("editMulticamCutToAngle1").unwrap_err().contains("no shortcut"));
     }

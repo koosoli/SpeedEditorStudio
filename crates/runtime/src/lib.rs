@@ -6,16 +6,30 @@
 //! Resolve quits. It reconnects after unplugging and releases every key it
 //! pressed on stop, disconnect, hand-over or profile change.
 
-#[cfg(not(windows))]
-compile_error!("the runtime's input output layer currently supports Windows only");
+#[cfg(not(any(windows, target_os = "macos")))]
+compile_error!("the runtime's input and output layer supports Windows and macOS");
 
+// The parts that talk to the operating system have one file per platform.
+// The macOS ones are untested (see README, "macOS").
+#[cfg_attr(windows, path = "focus_windows.rs")]
+#[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
 pub mod focus;
+#[cfg(target_os = "macos")]
+mod mac;
+#[cfg_attr(windows, path = "menus_windows.rs")]
+#[cfg_attr(target_os = "macos", path = "menus_macos.rs")]
 pub mod menus;
+#[cfg_attr(windows, path = "output_windows.rs")]
+#[cfg_attr(target_os = "macos", path = "output_macos.rs")]
 mod output;
 mod pacer;
+#[cfg_attr(windows, path = "processes_windows.rs")]
+#[cfg_attr(target_os = "macos", path = "processes_macos.rs")]
 pub mod processes;
 pub mod resolve;
 mod resolve_keys;
+#[cfg_attr(windows, path = "virtual_device_windows.rs")]
+#[cfg_attr(target_os = "macos", path = "virtual_device_macos.rs")]
 mod virtual_device;
 
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
@@ -209,6 +223,13 @@ impl<F: Fn(Event)> Loop<F> {
             }
         };
         let mut last_wait = String::new();
+        #[cfg(target_os = "macos")]
+        if !mac::accessibility_trusted(true) {
+            (self.on_event)(Event::Status(
+                "macOS: allow Speed Editor Studio under System Settings › Privacy & Security › Accessibility,                  then restart it; until then it can't send keys to Resolve"
+                    .into(),
+            ));
+        }
         if self.pass_through {
             match virtual_device::VirtualDevice::start() {
                 Ok(device) => {

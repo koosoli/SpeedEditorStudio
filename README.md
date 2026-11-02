@@ -38,15 +38,18 @@ Resolve.**
   active page's LED blinks.
 - **Normal mode.** CUT + SMTH CUT switches every key back to its plain native function (the
   three LEDs flash to confirm). Press the chord again to return to your pages.
-- **Modifier layers.** Hold CUT, DIS or SMTH CUT and press another key: each page has a layer
-  per modifier, and a quick tap still switches the page. Examples in the default profile:
-  CUT + IN/OUT ripple start/end to playhead, CUT + TRIM IN/OUT trim start/end, CUT + SLIP keys
-  select clips forward/backward on all tracks.
-- **Timeline zoom.** CUT + wheel zooms the timeline in and out.
-- **Select a clip by track.** DIS + CAM n selects the clip under the playhead on track n,
-  with its linked sound.
+- **Three function keys on every page.** CUT, DIS and SMTH CUT also work like Fn keys: hold
+  one and press another key, and that key does what you mapped for this combination. Every
+  page has its own CUT + key, DIS + key and SMTH CUT + key layer, so each page holds up to four
+  actions per key. A quick tap of CUT, DIS or SMTH CUT on its own still switches the page.
+  In the default profile, CUT + IN/OUT ripple to the playhead, CUT + TRIM IN/OUT trim start or
+  end, and CUT + SLIP SRC/DEST select clips backward/forward on all tracks.
+- **Zoom the timeline with the jog wheel.** Hold CUT and turn the wheel: clockwise zooms in,
+  anticlockwise zooms out.
+- **Select a clip on a certain track.** DIS + CAM 1–8 selects the clip under the playhead on
+  that track, with its linked sound, using Resolve's own selection keys.
 - **Video or audio only.** VIDEO ONLY or AUDIO ONLY pressed on its own lights up and makes
-  CUT + CAM and DIS + CAM take only the video or only the audio (even of linked clips); press
+  CUT + CAM and DIS + CAM take only the video or only the audio (even of a linked clip); press
   it again for both.
 - **Track targeting.** CUT + CAM n makes only video track n + audio track n take part in
   edits, until CUT + CAM 9 turns all tracks back on. The CAM key stays lit.
@@ -56,7 +59,8 @@ Resolve.**
   a shortcut, a Resolve function, a Resolve menu item, a Resolve script command, an app or
   URL to open, or text to type.
 - **Resolve menus without shortcuts.** Functions that have no usable shortcut are run through
-  Resolve's own menus (Windows UI Automation), so they work on any keyboard layout.
+  Resolve's own menus (UI Automation on Windows, Accessibility on macOS), so they work on any
+  keyboard layout.
 - **Live mirror.** The app shows the device's LEDs, flashes the keys you press, turns the
   on-screen wheel and shows the battery level.
 - **USB and Bluetooth.**
@@ -71,7 +75,7 @@ for your own mapping.
 
 ## Requirements
 
-- Windows 10 or 11.
+- Windows 10 or 11. macOS is prepared but **untested**, see [macOS](#macos-untested).
 - DaVinci Resolve (developed and measured with Resolve Studio 21.1). For the script actions,
   set *Preferences › System › General › External scripting using* to **Local**.
 - A DaVinci Resolve Speed Editor, over USB or paired over Bluetooth.
@@ -145,7 +149,7 @@ Resolve.
 | --- | --- |
 | [`crates/speed-editor`](crates/speed-editor) | HID protocol: authentication, keys, LEDs, jog modes, battery |
 | [`crates/mapper`](crates/mapper) | Pure engine: pages, Fn layer, long press, native gestures, the Resolve-style wheel |
-| [`crates/runtime`](crates/runtime) | Device loop, keyboard output, Resolve scripting helper, menus via UI Automation, focus handling, wheel pacing |
+| [`crates/runtime`](crates/runtime) | Device loop, keyboard output, Resolve scripting helper, Resolve menus, focus handling, wheel pacing; one file per platform for the system-specific parts (`*_windows.rs`, `*_macos.rs`) |
 | [`apps/studio`](apps/studio) | The Tauri app (plain HTML/JS UI in `apps/studio/ui`) |
 | [`apps/se-mapper`](apps/se-mapper) | Command-line runner |
 | [`tools/se-probe`](tools/se-probe), [`tools/se-emu`](tools/se-emu), [`tools/capture`](tools/capture) | Protocol probe, stand-alone emulated Speed Editor, USB capture decoder and the test robots used for measuring Resolve |
@@ -153,6 +157,39 @@ Resolve.
 Everything measured along the way is in [`docs/FINDINGS.md`](docs/FINDINGS.md), from wheel
 units per frame and the shuttle curve to which key sequences give a ripple, roll or slip
 trim. Decoded captures are in [`docs/captures`](docs/captures).
+
+## macOS (untested)
+
+The code is prepared for macOS, but **nobody has run it on a Mac with a Speed Editor and
+DaVinci Resolve yet.** It compiles for macOS (Apple Silicon and Intel; the
+[macOS build](.github/workflows/macos.yml) builds and tests it on a real Mac on GitHub), and
+the macOS parts were written to mirror the Windows ones. Expect rough edges, and please
+report what works and what doesn't.
+
+What's different on macOS:
+
+- **No pass-through.** usbip-win2 exists only for Windows, and a virtual USB/HID device on
+  macOS needs a driver entitlement from Apple. So on a Mac the app always works the way it
+  does on Windows without usbip-win2: it imitates the native keys with Resolve's shortcuts and
+  menus, with the calibrated wheel. Functions without a Resolve keyboard command (CLOSE UP,
+  SYNC BIN, …) only work if you map them.
+- **Start order matters there too.** Resolve opens the Speed Editor exclusively on macOS as
+  well: whoever starts first owns it. Start Speed Editor Studio first (switch on **Start at
+  login**), then Resolve.
+- **Permissions.** On first start macOS asks to allow the app under *System Settings › Privacy
+  & Security › Accessibility*; without it the app can't send keys to Resolve or use its menus.
+  If the device isn't seen, also allow it under *Input Monitoring*.
+- **Resolve's menus** are clicked through the Accessibility API, without opening them on
+  screen.
+- **Script actions** need a Python 3 on the Mac (Resolve's scripting requirement); the app
+  looks for one bundled with Resolve, then `/usr/bin/python3`.
+- **Not signed.** The app isn't signed or notarized, so macOS blocks the first start:
+  right-click the app › **Open** (or allow it under *Privacy & Security*).
+- Settings are kept in `~/Library/Application Support/OpenSpeedEditor`.
+
+To build it yourself on a Mac: install [Rust](https://rustup.rs/) and Node.js, then in
+`apps/studio` run `npx @tauri-apps/cli@2 icon icons/icon.png --output icons` and
+`npx @tauri-apps/cli@2 build --bundles app --config '{"bundle":{"active":true,"icon":["icons/icon.icns","icons/icon.png"]}}'`.
 
 ## Known limits
 
@@ -164,7 +201,7 @@ trim. Decoded captures are in [`docs/captures`](docs/captures).
   handshake (the device side uses an unknown calculation). Resolve retries and then accepts it
   anyway; a future Resolve version might be stricter.
 - The jog wheel's click is mechanical only. The device reports nothing, so it can't be mapped.
-- Windows only for now.
+- macOS is untested and has no pass-through, see [macOS](#macos-untested).
 
 ## License
 

@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader, Write};
+#[cfg(windows)]
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, ChildStdin, Command, Stdio};
@@ -17,6 +18,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 const HELPER: &str = include_str!("resolve_helper.py");
+#[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -137,14 +139,11 @@ fn spawn(replies: Sender<Reply>) -> Result<(Child, ChildStdin), String> {
     let script = std::env::temp_dir().join("open-speed-editor-resolve-helper.py");
     std::fs::write(&script, HELPER).map_err(|e| format!("cannot write the Resolve helper: {e}"))?;
 
-    let mut child = Command::new(&python)
-        .arg("-u")
-        .arg(&script)
-        .arg(&library)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .creation_flags(CREATE_NO_WINDOW)
+    let mut command = Command::new(&python);
+    command.arg("-u").arg(&script).arg(&library).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+    let mut child = command
         .spawn()
         .map_err(|e| format!("cannot start {}: {e}", python.display()))?;
     let stdin = child.stdin.take().unwrap();
@@ -162,6 +161,7 @@ fn spawn(replies: Sender<Reply>) -> Result<(Child, ChildStdin), String> {
 }
 
 /// Finds Resolve's bundled Python and its scripting library.
+#[cfg(windows)]
 fn locate() -> Result<(PathBuf, PathBuf), String> {
     let mut dirs = Vec::new();
     if let Some(dir) = std::env::var_os("RESOLVE_INSTALL_DIR") {
@@ -180,4 +180,28 @@ fn locate() -> Result<(PathBuf, PathBuf), String> {
     let bundled = dir.join("ResolvePython").join("ResolvePython.exe");
     let python = if bundled.is_file() { bundled } else { PathBuf::from("python") };
     Ok((python, dir.join("fusionscript.dll")))
+}
+
+/// Finds a Python 3 and Resolve's scripting library (fusionscript.so) on
+/// macOS. Resolve's scripting needs a Python 3 installed on the Mac; one
+/// bundled with Resolve is used if present. UNTESTED (see README, "macOS").
+#[cfg(target_os = "macos")]
+fn locate() -> Result<(PathBuf, PathBuf), String> {
+    let mut apps = Vec::new();
+    if let Some(dir) = std::env::var_os("RESOLVE_INSTALL_DIR") {
+        apps.push(PathBuf::from(dir));
+    }
+    apps.push(PathBuf::from("/Applications/DaVinci Resolve/DaVinci Resolve.app"));
+    apps.push(PathBuf::from("/Applications/DaVinci Resolve Studio/DaVinci Resolve.app"));
+    let app = apps
+        .into_iter()
+        .find(|a| a.join("Contents/Libraries/Fusion/fusionscript.so").is_file())
+        .ok_or("DaVinci Resolve was not found in /Applications")?;
+    let library = app.join("Contents/Libraries/Fusion/fusionscript.so");
+    let bundled = ["Contents/Libraries/ResolvePython/bin/python3", "Contents/MacOS/ResolvePython"]
+        .iter()
+        .map(|p| app.join(p))
+        .find(|p| p.is_file());
+    let python = bundled.unwrap_or_else(|| PathBuf::from("/usr/bin/python3"));
+    Ok((python, library))
 }

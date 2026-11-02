@@ -1112,8 +1112,8 @@ async function init() {
     try {
       await api.invoke("set_autostart", { enabled: e.target.checked });
       log(e.target.checked
-        ? "Starts with Windows, hidden in the tray, so it has the Speed Editor before Resolve starts"
-        : "No longer starts with Windows");
+        ? "Starts when you sign in, hidden in the tray, so it has the Speed Editor before Resolve starts"
+        : "No longer starts when you sign in");
     } catch (err) {
       e.target.checked = !e.target.checked;
       log("Start with Windows: " + err);
@@ -1121,6 +1121,10 @@ async function init() {
   };
   if (window.__TAURI__) {
     $("autostartToggle").checked = await api.invoke("autostart_enabled").catch(() => false);
+  }
+  if (/Mac/.test(navigator.platform || navigator.userAgent)) {
+    // macOS names it differently, and has no pass-through (see README).
+    $("autostartToggle").parentElement.querySelector("span:last-child").textContent = "Start at login";
   }
 
   // Restore the last connection settings, so the app picks up where it was.
