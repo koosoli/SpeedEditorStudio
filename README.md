@@ -17,14 +17,19 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 > project's development, testing and build distribution. Building from source stays free,
 > and your rights under the license are the same either way.
 
+> [!WARNING]
+> **Windows only for now. macOS support is completely untested.** The macOS code exists and
+> compiles, but it has never been run on a Mac, with a Speed Editor or with DaVinci Resolve.
+> Assume it doesn't work until someone reports otherwise. See [macOS](#macos-untested).
+
 ![Speed Editor Studio](docs/images/studio.png)
 
 DaVinci Resolve opens the Speed Editor exclusively, so other tools can't add anything to it
 while Resolve runs. Speed Editor Studio takes over the device instead and presents Resolve
 with an **emulated Speed Editor**. Keys doing their native job and the wheel are passed
 through to Resolve unchanged, so they behave exactly like the original, Smart Insert and
-the jog feel included. On top of that, you add your own pages, an Fn layer and Stream
-Deck-style actions, which the app handles itself. **You never have to change a shortcut in
+the jog feel included. On top of that, you add your own pages, function-key layers and
+Stream Deck-style actions, which the app handles itself. **You never have to change a shortcut in
 Resolve.**
 
 ## Features
@@ -104,7 +109,7 @@ Resolve.**
 
 ## Requirements
 
-- Windows 10 or 11. macOS is prepared but **untested**, see [macOS](#macos-untested).
+- Windows 10 or 11. macOS is **completely untested**, see [macOS](#macos-untested).
 - DaVinci Resolve (developed and measured with Resolve Studio 21.1). For the script actions,
   set *Preferences › System › General › External scripting using* to **Local**.
 - A DaVinci Resolve Speed Editor, over USB or paired over Bluetooth.
@@ -153,13 +158,13 @@ Then start `target\release\se-studio.exe`. Turn on **Connect** and **Active**.
 Speed Editor, and Resolve takes one the moment it appears. When the app holds the real device
 first, Resolve uses the emulated one instead.
 
-The easiest way is **Start with Windows** (settings ⚙ in the top bar): the app then starts hidden in the system
-tray when you sign in. Closing the window keeps it running in the tray; **Quit** in the tray
+The easiest way is **Start with Windows** (settings ⚙ in the top bar): the app then starts
+hidden in the system tray when you sign in. Closing the window keeps it running in the tray; **Quit** in the tray
 menu ends it. If Resolve got the device first anyway, the app says so: quit Resolve and start
 it again.
 
-- **Give to Resolve** (also under ⚙) hands the device back to Resolve's own driver whenever Resolve runs.
-  It's off by default, because then your mappings can't work inside Resolve.
+- **Give to Resolve** (also under ⚙) hands the device back to Resolve's own driver whenever
+  Resolve runs. It's off by default, because then your mappings can't work inside Resolve.
 - Your profile is saved to `%APPDATA%\OpenSpeedEditor\profile.toml`.
 
 There is also a command-line runner without a window:
@@ -188,6 +193,11 @@ units per frame and the shuttle curve to which key sequences give a ripple, roll
 trim. Decoded captures are in [`docs/captures`](docs/captures).
 
 ## macOS (untested)
+
+> [!CAUTION]
+> **Completely untested.** Nobody has started this app on a Mac yet: not with a Speed
+> Editor, not with DaVinci Resolve, not at all. There are no macOS builds. Use it only if
+> you want to try it out and report back.
 
 The code is prepared for macOS, but **nobody has run it on a Mac with a Speed Editor and
 DaVinci Resolve yet.** It compiles for macOS (Apple Silicon and Intel; the
@@ -230,7 +240,7 @@ To build it yourself on a Mac: install [Rust](https://rustup.rs/) and Node.js, t
   handshake (the device side uses an unknown calculation). Resolve retries and then accepts it
   anyway; a future Resolve version might be stricter.
 - The jog wheel's click is mechanical only. The device reports nothing, so it can't be mapped.
-- macOS is untested and has no pass-through, see [macOS](#macos-untested).
+- macOS is completely untested and has no pass-through, see [macOS](#macos-untested).
 
 ## License
 

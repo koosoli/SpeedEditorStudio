@@ -1988,7 +1988,7 @@ checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "mapper"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "speed-editor",
@@ -2823,7 +2823,7 @@ dependencies = [
 
 [[package]]
 name = "runtime"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "hidapi",
  "mapper",
@@ -2936,14 +2936,14 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "se-emu"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "speed-editor",
 ]
 
 [[package]]
 name = "se-mapper"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ctrlc",
  "mapper",
@@ -2952,7 +2952,7 @@ dependencies = [
 
 [[package]]
 name = "se-probe"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ctrlc",
  "hidapi",
@@ -2961,7 +2961,7 @@ dependencies = [
 
 [[package]]
 name = "se-studio"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "mapper",
  "runtime",
@@ -3271,7 +3271,7 @@ dependencies = [
 
 [[package]]
 name = "speed-editor"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "hidapi",
 ]
