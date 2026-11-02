@@ -433,9 +433,9 @@ impl Engine {
                                 Key::Scroll => out.push(Output::ResolveKey("controlStepForward".into())),
                                 _ => self.native_fn_press(key, &mut out),
                             },
-                            // DIS + SHTL / SCRL: next / previous clip (↓ and ↑).
+                            // DIS + SHTL / SCRL: previous / next clip (↑ and ↓).
                             Some(Key::Dissolve) if matches!(key, Key::Shuttle | Key::Scroll) => {
-                                let command = if key == Key::Shuttle { "controlClipNext" } else { "controlClipPrev" };
+                                let command = if key == Key::Shuttle { "controlClipPrev" } else { "controlClipNext" };
                                 out.push(Output::ResolveKey(command.into()));
                             }
                             // SMTH CUT + CAM 1-7 opens Resolve's pages, in the
@@ -1450,9 +1450,9 @@ mod tests {
         assert!(has(&e.on_keys(&[CUT, Key::Scroll.code()]), &key("controlStepForward")));
         e.on_keys(&[]);
         e.on_keys(&[dis]);
-        assert!(has(&e.on_keys(&[dis, Key::Shuttle.code()]), &key("controlClipNext")));
+        assert!(has(&e.on_keys(&[dis, Key::Shuttle.code()]), &key("controlClipPrev")));
         e.on_keys(&[dis]);
-        assert!(has(&e.on_keys(&[dis, Key::Scroll.code()]), &key("controlClipPrev")));
+        assert!(has(&e.on_keys(&[dis, Key::Scroll.code()]), &key("controlClipNext")));
         e.on_keys(&[]);
         // SHTL on its own still switches the wheel mode.
         assert!(!has(&e.on_keys(&[Key::Shuttle.code()]), &key("controlStepReverse")));

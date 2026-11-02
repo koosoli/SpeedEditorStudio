@@ -60,7 +60,7 @@ slip_dest = { resolve_menu = "Timeline > Select Clips > Forward on All Tracks", 
 # CUT + CLOSE UP (built in): Trim tool on/off - TRIM IN/OUT ripple the timeline
 # while CLOSE UP is lit, and leave a gap when it's dark (Selection tool).
 # CUT + SHTL / SCRL (built in): one frame back / forward (like the arrow keys).
-# DIS + SHTL / SCRL (built in): next / previous clip (like the down / up arrow keys).
+# DIS + SHTL / SCRL (built in): previous / next clip (like the up / down arrow keys).
 # SMTH CUT + CAM 1-7 (built in on DaVinci pages): opens Resolve's Media, Cut, Edit,
 # Fusion, Color, Fairlight and Deliver page, unless you map them yourself.
 cam1 = { solo_track = 1, label = "Only track 1" }
