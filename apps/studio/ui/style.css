@@ -200,6 +200,7 @@ select {
 .key.tone-gray .alt { color: #dfe2e6; }
 .key.tone-gray .act { color: #062a32; font-weight: 600; }
 .key.tone-gray .act.default { color: #2c3036; }
+.key.tone-dark { background: #17191d; border-color: #262a30; }
 .key.tone-red { background: #8f2a25; border-color: #b23a33; color: #fbe9e7; }
 .key.tone-red .alt { color: #f3c4bf; }
 .key.tone-red .act { color: #ffe0dc; }
@@ -208,7 +209,7 @@ select {
 .key .led { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #43282a; }
 
 .key.mapped { background: #1f3940; border-color: #2a6a78; }
-.key.mapped.tone-gray, .key.mapped.tone-red { box-shadow: inset 0 -3px 0 var(--accent); }
+.key.mapped.tone-gray, .key.mapped.tone-red, .key.mapped.tone-dark { box-shadow: inset 0 -3px 0 var(--accent); }
 .key.page-key { background: #332a1b; border-color: #6b5226; }
 .key.page-key .act { color: var(--page); }
 .key .led.on { background: var(--led); box-shadow: 0 0 6px var(--led), 0 0 2px #fff inset; }
@@ -265,8 +266,8 @@ select {
 .list-row .what { color: var(--accent); }
 .list-row .row-label { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .view-switch { margin-right: 8px; }
-.chip.resolve { background: #3a2a14; border-color: #8a6a2a; }
-.chip.resolve .chip-detail { color: #e9c98b; }
+.chip.resolve { border-left: 3px solid #8a7550; }
+.chip.resolve .chip-detail { color: #b9b1a2; }
 
 .hint { margin: 0; color: var(--muted); }
 .hint.error { color: var(--error); }
@@ -284,6 +285,15 @@ select {
 .insp-head h2 { margin: 0; font-size: 18px; }
 .insp-head .sub { color: var(--muted); margin-top: 2px; }
 .info { margin: 0; color: var(--muted); }
+/* Explanations show only after "?" (top right of the panel). */
+.inspector { position: relative; }
+.inspector:not(.help) .info, .inspector:not(.help) .note:not(.error) { display: none; }
+.help-toggle {
+  position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; padding: 0;
+  border-radius: 50%; font-weight: 700; color: var(--muted);
+}
+.inspector.help .help-toggle { color: var(--accent); border-color: var(--accent); }
+.insp-head { padding-right: 34px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .note { font-size: 12px; color: var(--muted); }
@@ -318,11 +328,11 @@ select {
 .chip {
   display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
   padding: 6px 10px; min-width: 104px;
-  background: #1e3a41; border-color: #2a6a78;
+  background: #23272d; border-color: #343a42;
 }
-.chip:hover { background: #24474f; }
+.chip:hover { background: #2b3038; border-color: #4a525c; }
 .chip-name { font-weight: 600; font-size: 12px; }
-.chip-detail { font-size: 11px; color: #9fd8e3; }
+.chip-detail { font-size: 11px; color: var(--muted); }
 
 .log { padding: 6px 18px; background: #0e1013; border-top: 1px solid var(--line); color: var(--muted); font: 11.5px/1.5 Consolas, monospace; min-height: 30px; }
 

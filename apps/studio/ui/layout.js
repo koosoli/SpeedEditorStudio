@@ -5,23 +5,26 @@
 
 const LED = { led: true };
 
+// The darker keys of the real device: the trim block and the CAM keys.
+const DARK = { tone: "dark" };
+const CAM = { led: true, tone: "dark" };
 const KEY_LAYOUT = {
   left: [
     [["smart_insert", "SMART INSRT", 2, { alt: "CLIP" }], ["append", "APPND", 2, { alt: "CLIP" }], ["ripple_overwrite", "RIPL O/WR", 2]],
     [["close_up", "CLOSE UP", 2, { led: true, alt: "YPOS" }], ["place_on_top", "PLACE ON TOP", 2], ["source_overwrite", "SRC O/WR", 2]],
     "gap",
     [["in", "IN", 3, { alt: "CLR", tone: "gray" }], ["out", "OUT", 3, { alt: "CLR", tone: "gray" }]],
-    [["trim_in", "TRIM IN", 2], ["trim_out", "TRIM OUT", 2], ["roll", "ROLL", 2, { alt: "SLIDE" }]],
-    [["slip_source", "SLIP SRC", 2], ["slip_dest", "SLIP DEST", 2], ["transition_duration", "TRANS DUR", 2, { alt: "SET" }]],
+    [["trim_in", "TRIM IN", 2, DARK], ["trim_out", "TRIM OUT", 2, DARK], ["roll", "ROLL", 2, { alt: "SLIDE", tone: "dark" }]],
+    [["slip_source", "SLIP SRC", 2, DARK], ["slip_dest", "SLIP DEST", 2, DARK], ["transition_duration", "TRANS DUR", 2, { alt: "SET", tone: "dark" }]],
     [["cut", "CUT", 2, LED], ["dissolve", "DIS", 2, LED], ["smooth_cut", "SMTH CUT", 2, LED]],
   ],
   middle: [
     [["escape", "ESC", 2, { alt: "UNDO" }], ["sync_bin", "SYNC BIN", 2], ["audio_level", "AUDIO LEVEL", 2, { alt: "MARK" }], ["full_view", "FULL VIEW", 2, { alt: "RVW", tone: "red" }]],
     [["transition", "TRANS", 2, { led: true, alt: "TITLE" }], ["split", "SPLIT", 2, { alt: "MOVE" }], ["snap", "SNAP", 2, { led: true, alt: "=" }], ["ripple_delete", "RIPL DEL", 2]],
     "gap",
-    [["cam7", "CAM 7", 2, LED], ["cam8", "CAM 8", 2, LED], ["cam9", "CAM 9", 2, LED], ["live_overwrite", "LIVE O/WR", 2, { led: true, alt: "RND" }]],
-    [["cam4", "CAM 4", 2, LED], ["cam5", "CAM 5", 2, LED], ["cam6", "CAM 6", 2, LED], ["video_only", "VIDEO ONLY", 2, LED]],
-    [["cam1", "CAM 1", 2, LED], ["cam2", "CAM 2", 2, LED], ["cam3", "CAM 3", 2, LED], ["audio_only", "AUDIO ONLY", 2, LED]],
+    [["cam7", "CAM 7", 2, CAM], ["cam8", "CAM 8", 2, CAM], ["cam9", "CAM 9", 2, CAM], ["live_overwrite", "LIVE O/WR", 2, { led: true, alt: "RND" }]],
+    [["cam4", "CAM 4", 2, CAM], ["cam5", "CAM 5", 2, CAM], ["cam6", "CAM 6", 2, CAM], ["video_only", "VIDEO ONLY", 2, LED]],
+    [["cam1", "CAM 1", 2, CAM], ["cam2", "CAM 2", 2, CAM], ["cam3", "CAM 3", 2, CAM], ["audio_only", "AUDIO ONLY", 2, LED]],
     [["stop_play", "STOP / PLAY", 8]],
   ],
   right: [
@@ -181,9 +184,12 @@ const PALETTE = [
   ]},
 ];
 
+// Shortcuts are shown with keyboard symbols (⌃ Ctrl, ⌥ Alt, ⇧ Shift; ⌘ on a Mac).
+const ON_MAC = /Mac/.test(navigator.platform || navigator.userAgent);
 const KEY_NAMES = {
-  ctrl: "Ctrl", shift: "Shift", alt: "Alt", win: "Win", esc: "Esc", enter: "Enter", space: "Space",
-  tab: "Tab", backspace: "Backspace", delete: "Del", insert: "Ins", home: "Home", end: "End",
+  ctrl: "⌃", control: "⌃", shift: "⇧", alt: "⌥", option: "⌥", win: ON_MAC ? "⌘" : "⊞", cmd: "⌘", command: "⌘",
+  esc: "⎋", enter: "⏎", return: "⏎", space: "␣", tab: "⇥", backspace: "⌫", delete: "⌦", del: "⌦",
+  insert: "Ins", home: "Home", end: "End",
   pageup: "PgUp", pagedown: "PgDn", left: "←", right: "→", up: "↑", down: "↓",
   media_play_pause: "Play/Pause", media_next: "Next track", media_previous: "Prev track", media_stop: "Stop",
   volume_up: "Vol +", volume_down: "Vol −", volume_mute: "Mute", printscreen: "PrtSc",
@@ -195,7 +201,7 @@ function prettyShortcut(text) {
     if (KEY_NAMES[p]) return KEY_NAMES[p];
     if (/^f\d+$/.test(p)) return p.toUpperCase();
     return p.length === 1 ? p.toUpperCase() : p;
-  }).join(" + ");
+  }).join(" ");
 }
 
 // Which action an object holds: "keys", "run", "text", "resolve" or null.

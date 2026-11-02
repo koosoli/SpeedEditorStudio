@@ -450,6 +450,12 @@ function renderInspector() {
   else if (S.selected === "wheel") box.replaceChildren(...wheelEditor());
   else if (isPageKey(S.selected)) box.replaceChildren(...pageKeyInfo(S.selected));
   else box.replaceChildren(...keyEditor(S.selected));
+  // Explanations stay hidden until "?" is on, so the panel stays calm.
+  box.classList.toggle("help", !!S.help);
+  const help = el("button", "ghost help-toggle", "?");
+  help.title = S.help ? "Hide explanations" : "Show explanations";
+  help.onclick = () => { S.help = !S.help; savePrefs(); renderInspector(); };
+  box.prepend(help);
 }
 
 function heading(title, sub) {
@@ -470,11 +476,11 @@ function pageSettings() {
   const name = el("input");
   name.value = page().name;
   name.onchange = () => { page().name = name.value; changed(); };
-  const keyLabel = KEY_LABELS[S.doc.page_keys[S.page]];
+  const pageKey = KEY_LABELS[S.doc.page_keys[S.page]];
   const count = Object.keys(page().keys).length;
   const layerCounts = modifiers().map(m => `${keyLabel(m)} + key: ${Object.keys(layerKeys(page(), m)).length}`).join(", ");
   return [
-    heading(`Page ${S.page + 1}`, `Selected with ${keyLabel} on the device`),
+    heading(`Page ${S.page + 1}`, `Selected with ${pageKey} on the device`),
     field("Page name", name),
     el("p", "info", `${count} key${count === 1 ? "" : "s"} customised on this page. Click a key on the picture, or turn on Learn and press it on the device.`),
     modifiers().length
@@ -1040,7 +1046,7 @@ function loadPrefs() {
 function savePrefs() {
   try {
     localStorage.setItem("studio-prefs", JSON.stringify({
-      connected: S.connected, active: S.active, yieldToResolve: S.yieldToResolve,
+      connected: S.connected, active: S.active, yieldToResolve: S.yieldToResolve, help: !!S.help,
     }));
   } catch {
     // Storage unavailable: the app still works, it just won't remember.
@@ -1131,6 +1137,7 @@ async function init() {
   const prefs = loadPrefs();
   S.active = !!prefs.active;
   S.yieldToResolve = !!prefs.yieldToResolve;
+  S.help = !!prefs.help;
   $("yieldToggle").checked = S.yieldToResolve;
   if (prefs.connected && window.__TAURI__) await setConnected(true);
   $("paletteSearch").oninput = e => { S.search = e.target.value; renderPalette(); };
