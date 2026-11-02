@@ -5,7 +5,7 @@
   --line: #2d323a;
   --text: #dfe3e8;
   --muted: #8d95a0;
-  --key: #2b3038;
+  --key: #22262c;
   --key-text: #c9ced6;
   --accent: #27c4e0;
   --accent-dim: #164a55;
@@ -136,7 +136,7 @@ select {
 .layer-switch { align-self: center; margin-bottom: 6px; }
 .layer-switch button { padding: 6px 14px; }
 .layer-switch button.on:last-child { background: #3b2a5c; color: #c9a8ff; }
-.device.fn { background: linear-gradient(#211d2b, #17151d); border-color: #4b3a6e; }
+.device.fn { background: linear-gradient(#332d40, #2a2535); border-color: #5a4884; }
 .device.fn .key.mapped { background: #2e2445; border-color: #6a4fa0; }
 .device.fn .key.mapped .act { color: #c9a8ff; }
 .key.fn-key .act { color: #c9a8ff; }
@@ -153,7 +153,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(260px, 26vw, 340px);
   min-height: 0;
-  background: var(--panel-2);
+  background: #0f1114;
   border-top: 1px solid var(--line);
 }
 
@@ -164,8 +164,8 @@ select {
   grid-template-columns: 3fr 4fr 3fr;
   gap: 30px;
   padding: 20px 26px;
-  background: linear-gradient(#1d2025, #16181c);
-  border: 1px solid #2a2e35;
+  background: linear-gradient(#30353d, #282c33);
+  border: 1px solid #3c424b;
   border-radius: 18px;
   box-shadow: 0 18px 40px #0008, inset 0 1px 0 #ffffff0d;
   /* Fixed design size; app.js scales it with `zoom` to fit the window. */
@@ -200,7 +200,7 @@ select {
 .key.tone-gray .alt { color: #dfe2e6; }
 .key.tone-gray .act { color: #062a32; font-weight: 600; }
 .key.tone-gray .act.default { color: #2c3036; }
-.key.tone-dark { background: #17191d; border-color: #262a30; }
+.key.tone-dark { background: #16181c; border-color: #23262c; }
 .key.tone-red { background: #8f2a25; border-color: #b23a33; color: #fbe9e7; }
 .key.tone-red .alt { color: #f3c4bf; }
 .key.tone-red .act { color: #ffe0dc; }
