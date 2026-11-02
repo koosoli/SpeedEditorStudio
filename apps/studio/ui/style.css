@@ -235,6 +235,8 @@ select {
 .key .led { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #43282a; }
 
 .key.mapped { background: #1f3940; border-color: #2a6a78; }
+/* A mapped key turns teal whatever its tone, so its action text follows. */
+.key.mapped .act { color: var(--accent); }
 .key.mapped.tone-gray, .key.mapped.tone-red, .key.mapped.tone-dark { box-shadow: inset 0 -3px 0 var(--accent); }
 .key.page-key { background: #332a1b; border-color: #6b5226; }
 .key.page-key .act { color: var(--page); }

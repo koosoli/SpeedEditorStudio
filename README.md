@@ -72,9 +72,27 @@ Resolve.**
 
 ![The device view](docs/images/device.png)
 
-Keys show their secondary function in brackets, as printed on the device. "DaVinci" means the
-key does its native job. "—" means Resolve has no keyboard command for it, so the key is free
-for your own mapping.
+*The DaVinci page with its CUT + key layer: what each key does while CUT is held.*
+
+## The editor
+
+- **Pick a key** by clicking it on the picture, or press it on the Speed Editor while the
+  app's window is in front. The panel on the right sets its label, press and long-press
+  action. Keys show their secondary function in brackets, as printed on the device. Plain
+  keys keep their DaVinci function; dimmed keys have no Resolve keyboard command, so they
+  are free for your own mapping. Mapped keys turn teal.
+- **Pages** are the tabs on the left (CUT, DIS, SMTH CUT). The icons on the right switch
+  between the picture and a list of all mappings, and between the plain keys and the CUT,
+  DIS and SMTH CUT layers. The picture turns purple only while you hold a function key on
+  the device.
+- **Actions** at the bottom folds open: drag an action onto a key, or select a key and click
+  the action.
+- **Top bar:** **Connect** takes over the Speed Editor, **Active** switches your mappings
+  on (when off, presses only light up in the app, for testing). Then come import, export
+  and revert, the settings (⚙) with **Give to Resolve** and **Start with Windows**, and
+  **Save**. The dot shows the connection; hover it for details.
+- **?** in the side panel shows the longer explanations.
+- The console at the bottom shows what just happened, newest line first.
 
 ## Requirements
 
@@ -121,18 +139,18 @@ built in.
 cargo build --release
 ```
 
-Then start `target\release\se-studio.exe`. Turn on **Connect** and **Mappings active**.
+Then start `target\release\se-studio.exe`. Turn on **Connect** and **Active**.
 
 **Start Speed Editor Studio before DaVinci Resolve.** Windows lets only one program hold the
 Speed Editor, and Resolve takes one the moment it appears. When the app holds the real device
 first, Resolve uses the emulated one instead.
 
-The easiest way is **Start with Windows** (top bar): the app then starts hidden in the system
+The easiest way is **Start with Windows** (settings ⚙ in the top bar): the app then starts hidden in the system
 tray when you sign in. Closing the window keeps it running in the tray; **Quit** in the tray
 menu ends it. If Resolve got the device first anyway, the app says so: quit Resolve and start
 it again.
 
-- **Give to Resolve** hands the device back to Resolve's own driver whenever Resolve runs.
+- **Give to Resolve** (also under ⚙) hands the device back to Resolve's own driver whenever Resolve runs.
   It's off by default, because then your mappings can't work inside Resolve.
 - Your profile is saved to `%APPDATA%\OpenSpeedEditor\profile.toml`.
 
