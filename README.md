@@ -52,6 +52,9 @@ Resolve.**
 - **Source Tape on the Edit page too.** SOURCE switches the Edit page's source viewer
   between Source Clip and Source Tape, as it does on the Cut page (needs Resolve's
   scripting set to Local, see Requirements).
+- **Step by frame or by clip.** CUT + SHTL goes one frame back and CUT + SCRL one frame
+  forward, like ← and →. DIS + SHTL jumps to the next clip and DIS + SCRL to the previous
+  one, like ↓ and ↑.
 - **Switch Resolve's pages.** SMTH CUT + CAM 1–7 opens the Media, Cut, Edit, Fusion, Color,
   Fairlight and Deliver page (needs Resolve's scripting set to Local, see Requirements).
 - **Select a clip on a certain track.** DIS + CAM 1–8 selects the clip under the playhead on

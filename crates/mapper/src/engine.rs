@@ -428,8 +428,16 @@ impl Engine {
                             Some(m) if Some(m) == self.profile.fn_key => match key {
                                 Key::VideoOnly | Key::AudioOnly => self.arm_track_scope(key),
                                 Key::CloseUp => self.toggle_trim_tool(&mut out),
+                                // One frame back / forward (Resolve's ← and →).
+                                Key::Shuttle => out.push(Output::ResolveKey("controlStepReverse".into())),
+                                Key::Scroll => out.push(Output::ResolveKey("controlStepForward".into())),
                                 _ => self.native_fn_press(key, &mut out),
                             },
+                            // DIS + SHTL / SCRL: next / previous clip (↓ and ↑).
+                            Some(Key::Dissolve) if matches!(key, Key::Shuttle | Key::Scroll) => {
+                                let command = if key == Key::Shuttle { "controlClipNext" } else { "controlClipPrev" };
+                                out.push(Output::ResolveKey(command.into()));
+                            }
                             // SMTH CUT + CAM 1-7 opens Resolve's pages, in the
                             // order of the page buttons (Media … Deliver).
                             Some(Key::SmoothCut) => {
@@ -1410,6 +1418,44 @@ mod tests {
         e.on_keys(&[]);
         // CAM 3 on its own keeps its native function.
         assert!(!has(&e.on_keys(&[Key::Cam3.code()]), &page("edit")));
+    }
+
+    #[test]
+    fn cut_and_dis_with_shtl_scrl_step_frames_and_clips() {
+        let text = r#"
+            version = 1
+            page_keys = ["cut", "dissolve", "smooth_cut"]
+            toggle_chord = ["cut", "smooth_cut"]
+            fn_key = "cut"
+            modifier_keys = ["dissolve"]
+
+            [[pages]]
+            name = "DaVinci"
+            davinci_defaults = true
+            wheel = { davinci = {} }
+
+            [[pages]]
+            name = "Two"
+
+            [[pages]]
+            name = "Three"
+        "#;
+        let mut e = Engine::new(Profile::from_toml(text).unwrap());
+        e.on_keys(&[]);
+        let key = |c: &str| Output::ResolveKey(c.into());
+        let dis = Key::Dissolve.code();
+        e.on_keys(&[CUT]);
+        assert!(has(&e.on_keys(&[CUT, Key::Shuttle.code()]), &key("controlStepReverse")));
+        e.on_keys(&[CUT]);
+        assert!(has(&e.on_keys(&[CUT, Key::Scroll.code()]), &key("controlStepForward")));
+        e.on_keys(&[]);
+        e.on_keys(&[dis]);
+        assert!(has(&e.on_keys(&[dis, Key::Shuttle.code()]), &key("controlClipNext")));
+        e.on_keys(&[dis]);
+        assert!(has(&e.on_keys(&[dis, Key::Scroll.code()]), &key("controlClipPrev")));
+        e.on_keys(&[]);
+        // SHTL on its own still switches the wheel mode.
+        assert!(!has(&e.on_keys(&[Key::Shuttle.code()]), &key("controlStepReverse")));
     }
 
     #[test]

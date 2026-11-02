@@ -572,7 +572,7 @@ function pageKeyInfo(id) {
     heading(KEY_LABELS[id], `Page key ${index + 1}`),
     el("p", "info", `Releasing ${KEY_LABELS[id]} opens page ${index + 1} “${S.doc.pages[index].name}”. Page keys can't have their own action.`),
     id === S.doc.fn_key
-      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their action in the “${KEY_LABELS[id]} + key” layer. On a DaVinci page, ${KEY_LABELS[id]} + wheel zooms the timeline, and ${KEY_LABELS[id]} + CLOSE UP switches Resolve between the Trim tool (TRIM IN/OUT ripple; CLOSE UP lights) and the Selection tool (they leave a gap). VIDEO ONLY or AUDIO ONLY pressed on its own (it lights up; press again to switch off) makes track choices such as CUT + CAM and DIS + CAM take only the video or only the audio. With mappings off it is the normal transition.`)
+      ? el("p", "info", `Held, ${KEY_LABELS[id]} is the Fn key on every page: other keys then do their action in the “${KEY_LABELS[id]} + key” layer. On a DaVinci page, ${KEY_LABELS[id]} + wheel zooms the timeline, and ${KEY_LABELS[id]} + CLOSE UP switches Resolve between the Trim tool (TRIM IN/OUT ripple; CLOSE UP lights) and the Selection tool (they leave a gap). ${KEY_LABELS[id]} + SHTL / SCRL step one frame back / forward. VIDEO ONLY or AUDIO ONLY pressed on its own (it lights up; press again to switch off) makes track choices such as CUT + CAM and DIS + CAM take only the video or only the audio. With mappings off it is the normal transition.`)
       : modifierSwitch(id),
     inChord ? el("p", "info", `It's part of the on/off combination: ${chordText()}.`) : el("span"),
   ];
@@ -597,6 +597,7 @@ function modifierSwitch(id) {
   wrap.append(box, el("p", "info",
     `Held together with another key, ${KEY_LABELS[id]} picks its own layer (“${KEY_LABELS[id]} + key”) on every page. `
     + `A quick tap on its own still opens page ${S.doc.page_keys.indexOf(id) + 1}.`
+    + (id === "dissolve" ? " On a DaVinci page, DIS + SHTL / SCRL jump to the next / previous clip." : "")
     + (id === "smooth_cut" ? " On a DaVinci page, SMTH CUT + CAM 1–7 opens Resolve's pages: Media, Cut, Edit, Fusion, Color, Fairlight, Deliver." : "")));
   return wrap;
 }
