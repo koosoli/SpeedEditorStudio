@@ -21,8 +21,10 @@ impl Report {
         match buf {
             [4, rest @ ..] if rest.len() >= 12 => Report::Keys(
                 rest[..12]
-                    .chunks_exact(2)
-                    .map(|c| u16::from_le_bytes([c[0], c[1]]))
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
+                    .map(|c| u16::from_le_bytes(*c))
                     .filter(|&code| code != 0)
                     .collect(),
             ),

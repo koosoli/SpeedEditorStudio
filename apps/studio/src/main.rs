@@ -5,10 +5,10 @@
 //! (Resolve must be closed); "mappings active" decides whether key presses
 //! fire their actions or only light up in the editor.
 //!
-//! The app lives in the system tray: closing the window hides it, Quit in the
-//! tray menu ends it. "Start with Windows" starts it hidden at sign-in, so it
-//! holds the Speed Editor before DaVinci Resolve can. A second start just
-//! shows the running app.
+//! The app lives in the system tray (the menu bar on a Mac): closing the window
+//! hides it, Quit in the tray menu ends it. "Start with Windows" ("Start at
+//! login" on a Mac) starts it hidden at sign-in, so it holds the Speed Editor
+//! before DaVinci Resolve can. A second start just shows the running app.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -31,7 +31,10 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_dialog::DialogExt;
 
+#[cfg(not(target_os = "macos"))]
 const EXAMPLE_PROFILE: &str = include_str!("../../../profiles/example.toml");
+#[cfg(target_os = "macos")]
+const EXAMPLE_PROFILE: &str = include_str!("../../../profiles/example-macos.toml");
 
 /// Started with this argument (by "Start with Windows"), the window stays hidden.
 const HIDDEN_ARG: &str = "--hidden";
@@ -42,7 +45,7 @@ const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
 const RUN_VALUE: &str = "Speed Editor Studio";
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-/// macOS: the LaunchAgent that starts the app at login (untested, see README).
+/// macOS: the LaunchAgent that starts the app at login.
 #[cfg(target_os = "macos")]
 const LAUNCH_AGENT: &str = "io.github.openspeededitor.studio";
 
@@ -220,7 +223,10 @@ fn connect(
     }
     *slot = Some(Runtime::spawn(profile, Options { active, yield_to_resolve, pass_through: true }, move |event| {
         if let Some(text) = tray_text(&event) {
-            set_tray_status(&app, &text);
+            // Tray calls wait for the main thread, and `disconnect` and Quit join this
+            // thread from the main thread, so hand the update over without waiting.
+            let handle = app.clone();
+            let _ = app.run_on_main_thread(move || set_tray_status(&handle, &text));
         }
         let _ = app.emit("runtime", UiEvent::from(event));
     }));
@@ -345,7 +351,7 @@ fn tray_text(event: &Event) -> Option<String> {
 
 fn set_tray_status(app: &AppHandle, text: &str) {
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        // Windows shows at most 127 characters.
+        // Windows shows at most 127 characters; a Mac shows the tooltip in full.
         let tip: String = format!("Speed Editor Studio: {text}").chars().take(127).collect();
         let _ = tray.set_tooltip(Some(tip));
     }
@@ -440,6 +446,18 @@ fn main() {
             autostart_enabled,
             set_autostart,
         ])
-        .run(tauri::generate_context!())
-        .expect("failed to start Speed Editor Studio");
+        .build(tauri::generate_context!())
+        .expect("failed to start Speed Editor Studio")
+        .run(|app, event| match event {
+            // Clicking the Dock icon brings the hidden window back.
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { has_visible_windows: false, .. } => show_window(app),
+            // Quit (⌘Q, Dock menu): let go of the device and every key first.
+            tauri::RunEvent::ExitRequested { .. } => {
+                if let Some(runtime) = app.state::<AppState>().runtime.lock().unwrap().take() {
+                    runtime.stop();
+                }
+            }
+            _ => {}
+        });
 }

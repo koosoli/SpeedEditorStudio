@@ -184,7 +184,7 @@ fn locate() -> Result<(PathBuf, PathBuf), String> {
 
 /// Finds a Python 3 and Resolve's scripting library (fusionscript.so) on
 /// macOS. Resolve's scripting needs a Python 3 installed on the Mac; one
-/// bundled with Resolve is used if present. UNTESTED (see README, "macOS").
+/// bundled with Resolve is used if present.
 #[cfg(target_os = "macos")]
 fn locate() -> Result<(PathBuf, PathBuf), String> {
     let mut apps = Vec::new();
@@ -202,6 +202,16 @@ fn locate() -> Result<(PathBuf, PathBuf), String> {
         .iter()
         .map(|p| app.join(p))
         .find(|p| p.is_file());
-    let python = bundled.unwrap_or_else(|| PathBuf::from("/usr/bin/python3"));
+    // A GUI app doesn't get the shell's PATH, so the usual places are tried by
+    // hand. The system Python (Xcode Command Line Tools) comes first: it is the
+    // version Resolve's scripting library is known to load in.
+    let python = bundled
+        .or_else(|| {
+            ["/usr/bin/python3", "/opt/homebrew/bin/python3", "/usr/local/bin/python3"]
+                .iter()
+                .map(PathBuf::from)
+                .find(|p| p.is_file())
+        })
+        .ok_or("Python 3 was not found (install the Xcode Command Line Tools: xcode-select --install)")?;
     Ok((python, library))
 }

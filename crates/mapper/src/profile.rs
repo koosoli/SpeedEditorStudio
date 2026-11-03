@@ -690,4 +690,11 @@ mod tests {
         let p = Profile::from_toml(text).unwrap();
         assert_eq!(p.page_keys, vec![Key::Cut, Key::Dissolve, Key::SmoothCut]);
     }
+
+    #[test]
+    fn macos_example_profile_is_valid() {
+        let text = include_str!("../../../profiles/example-macos.toml");
+        let p = Profile::from_toml(text).unwrap();
+        assert_eq!(p.page_keys, vec![Key::Cut, Key::Dissolve, Key::SmoothCut]);
+    }
 }
