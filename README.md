@@ -7,15 +7,18 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/koosoli)
 
 > [!TIP]
-> **Don't want to compile? A ready-to-use Windows build is waiting for you.**
-> Supporters get access to our private builds repository,
-> [SpeedEditorStudio-Builds](https://github.com/SpeedEditorStudio/SpeedEditorStudio-Builds/releases),
-> with tested, ready-to-run releases. Become a member through
-> [GitHub Sponsors](https://github.com/sponsors/koosoli) for a humble monthly contribution, or
-> support the project once through [Buy Me a Coffee](https://buymeacoffee.com/koosoli) and
-> leave your GitHub username, and you'll be added. Either way you directly fund the
-> project's development, testing and build distribution. Building from source stays free,
-> and your rights under the license are the same either way.
+> **Don't want to compile? A ready-to-use Windows build is waiting for supporters.**
+> 1. Become a supporter: a monthly membership through
+>    [GitHub Sponsors](https://github.com/sponsors/koosoli), or a one-time contribution through
+>    [Buy Me a Coffee](https://buymeacoffee.com/koosoli) (leave your GitHub username there).
+> 2. You're then added to the private builds repository and get its releases.
+>
+> **The builds repository is private:** its link
+> ([SpeedEditorStudio-Builds](https://github.com/SpeedEditorStudio/SpeedEditorStudio-Builds/releases))
+> shows "404 – Page not found" until you've been added and are signed in to GitHub. That's
+> expected, not a broken link. Your support directly funds the project's development, testing
+> and builds. Building from source stays free, and your rights under the license are the same
+> either way.
 
 > [!WARNING]
 > **Windows only for now. macOS support is completely untested.** The macOS code exists and
@@ -136,6 +139,9 @@ because Resolve has no keyboard command for them: CLOSE UP, TRANS DUR, SYNC BIN,
 a transition), SRC O/WR and others.
 
 ## Ready-made builds
+
+Ready-made Windows builds are for supporters (see the tip at the top); the builds repository
+is private, so its link gives a 404 until you've been added.
 
 Speed Editor Studio needs **no installation**: unzip the download and start
 `Speed Editor Studio.exe`. Your settings are kept in `%APPDATA%\OpenSpeedEditor`.
