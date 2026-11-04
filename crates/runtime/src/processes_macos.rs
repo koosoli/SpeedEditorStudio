@@ -1,6 +1,6 @@
 //! Checks whether a program is running, by process name (macOS).
 //!
-//! UNTESTED: written without a Mac to run it on (see README, "macOS").
+//! Only partly tested on a Mac (see README, "macOS").
 
 use std::process::Command;
 

@@ -152,8 +152,20 @@ for (const block of Object.values(KEY_LAYOUT)) {
   }
 }
 
-// Ready-made actions for the palette: { keys }, { run } or { text }.
-const PALETTE = [
+const ON_MAC = /Mac/.test(navigator.platform || navigator.userAgent);
+
+// The system's own shortcuts and programs, for the palette.
+const SYSTEM_GROUPS = ON_MAC ? [
+  { group: "macOS", items: [
+    ["Copy", { keys: "cmd+c" }], ["Paste", { keys: "cmd+v" }], ["Cut", { keys: "cmd+x" }],
+    ["Undo", { keys: "cmd+z" }], ["Redo", { keys: "cmd+shift+z" }], ["Save", { keys: "cmd+s" }],
+    ["Select all", { keys: "cmd+a" }], ["Find", { keys: "cmd+f" }], ["Switch app", { keys: "cmd+tab" }],
+    ["Mission Control", { keys: "ctrl+up" }], ["Spotlight", { keys: "cmd+space" }],
+    ["Screenshot", { keys: "cmd+shift+4" }], ["Fullscreen", { keys: "ctrl+cmd+f" }],
+    ["New tab", { keys: "cmd+t" }], ["Close tab", { keys: "cmd+w" }],
+    ["Reopen tab", { keys: "cmd+shift+t" }], ["Next tab", { keys: "ctrl+tab" }], ["Prev tab", { keys: "ctrl+shift+tab" }],
+  ]},
+] : [
   { group: "Windows", items: [
     ["Copy", { keys: "ctrl+c" }], ["Paste", { keys: "ctrl+v" }], ["Cut", { keys: "ctrl+x" }],
     ["Undo", { keys: "ctrl+z" }], ["Redo", { keys: "ctrl+y" }], ["Save", { keys: "ctrl+s" }],
@@ -162,19 +174,28 @@ const PALETTE = [
     ["Fullscreen", { keys: "f11" }], ["New tab", { keys: "ctrl+t" }], ["Close tab", { keys: "ctrl+w" }],
     ["Reopen tab", { keys: "ctrl+shift+t" }], ["Next tab", { keys: "ctrl+tab" }], ["Prev tab", { keys: "ctrl+shift+tab" }],
   ]},
+];
+
+// Ready-made actions for the palette: { keys }, { run } or { text }.
+const PALETTE = [
+  ...SYSTEM_GROUPS,
   { group: "Media", items: [
     ["Play / Pause", { keys: "media_play_pause" }], ["Next track", { keys: "media_next" }],
     ["Previous track", { keys: "media_previous" }], ["Stop", { keys: "media_stop" }],
     ["Volume up", { keys: "volume_up" }], ["Volume down", { keys: "volume_down" }], ["Mute", { keys: "volume_mute" }],
   ]},
-  { group: "F13–F24", items: Array.from({ length: 12 }, (_, i) => [`F${13 + i}`, { keys: `f${13 + i}` }]) },
+  // A Mac keyboard stops at F20.
+  { group: ON_MAC ? "F13–F20" : "F13–F24", items: Array.from({ length: ON_MAC ? 8 : 12 }, (_, i) => [`F${13 + i}`, { keys: `f${13 + i}` }]) },
   { group: "Navigation", items: [
     ["Left", { keys: "left" }], ["Right", { keys: "right" }], ["Up", { keys: "up" }], ["Down", { keys: "down" }],
     ["Home", { keys: "home" }], ["End", { keys: "end" }], ["Page up", { keys: "pageup" }], ["Page down", { keys: "pagedown" }],
     ["Enter", { keys: "enter" }], ["Escape", { keys: "esc" }], ["Space", { keys: "space" }], ["Tab", { keys: "tab" }],
     ["Delete", { keys: "delete" }], ["Backspace", { keys: "backspace" }],
   ]},
-  { group: "Programs", items: [
+  { group: "Programs", items: ON_MAC ? [
+    ["Calculator", { run: "Calculator" }], ["TextEdit", { run: "TextEdit" }], ["Finder", { run: "Finder" }],
+    ["Activity Monitor", { run: "Activity Monitor" }], ["System Settings", { run: "System Settings" }],
+  ] : [
     ["Calculator", { run: "calc.exe" }], ["Notepad", { run: "notepad.exe" }], ["File Explorer", { run: "explorer.exe" }],
     ["Task Manager", { run: "taskmgr.exe" }], ["Settings", { run: "ms-settings:" }],
   ]},
@@ -185,7 +206,6 @@ const PALETTE = [
 ];
 
 // Shortcuts are shown with keyboard symbols (⌃ Ctrl, ⌥ Alt, ⇧ Shift; ⌘ on a Mac).
-const ON_MAC = /Mac/.test(navigator.platform || navigator.userAgent);
 const KEY_NAMES = {
   ctrl: "⌃", control: "⌃", shift: "⇧", alt: "⌥", option: "⌥", win: ON_MAC ? "⌘" : "⊞", cmd: "⌘", command: "⌘",
   esc: "⎋", enter: "⏎", return: "⏎", space: "␣", tab: "⇥", backspace: "⌫", delete: "⌦", del: "⌦",

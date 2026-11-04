@@ -6,7 +6,7 @@
 //! › AXMenuItem for submenus); an item is clicked with AXPress, without
 //! opening the menu on screen.
 //!
-//! UNTESTED: written without a Mac to run it on (see README, "macOS"). Needs
+//! Only partly tested on a Mac (see README, "macOS"). Needs
 //! the Accessibility permission (System Settings › Privacy & Security).
 
 use crate::mac::{self, Owned};

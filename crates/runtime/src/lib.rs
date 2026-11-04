@@ -10,7 +10,7 @@
 compile_error!("the runtime's input and output layer supports Windows and macOS");
 
 // The parts that talk to the operating system have one file per platform.
-// The macOS ones are untested (see README, "macOS").
+// The macOS ones are only partly tested (see README, "macOS").
 #[cfg_attr(windows, path = "focus_windows.rs")]
 #[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
 pub mod focus;
@@ -52,6 +52,27 @@ const LAYOUT_REFRESH: Duration = Duration::from_secs(300);
 const SELECT_TRACK_SETTLE: Duration = Duration::from_millis(600);
 /// How often to check whether DaVinci Resolve runs.
 const RESOLVE_CHECK: Duration = Duration::from_millis(500);
+
+/// The HID context of this run. Windows makes a fresh one each time.
+#[cfg(not(target_os = "macos"))]
+fn open_hid() -> Result<impl std::ops::DerefMut<Target = HidApi>, String> {
+    HidApi::new().map_err(|e| e.to_string())
+}
+
+/// The HID context of this run. On macOS hidapi ties its device manager to the run loop
+/// of the thread that initialised it, and every later call crashes once that thread is
+/// gone, e.g. after Disconnect and Connect. So there is one context for the whole
+/// process, created on the thread that first starts a `Runtime` (the main thread, whose
+/// run loop lives as long as the app) and never dropped.
+#[cfg(target_os = "macos")]
+fn open_hid() -> Result<impl std::ops::DerefMut<Target = HidApi>, String> {
+    use std::sync::{Mutex, OnceLock, PoisonError};
+    static API: OnceLock<Result<Mutex<HidApi>, String>> = OnceLock::new();
+    match API.get_or_init(|| HidApi::new().map(Mutex::new).map_err(|e| e.to_string())) {
+        Ok(api) => Ok(api.lock().unwrap_or_else(PoisonError::into_inner)),
+        Err(e) => Err(e.clone()),
+    }
+}
 
 /// Something the runtime wants its owner to know.
 #[derive(Clone, Debug)]
@@ -114,6 +135,13 @@ pub struct Runtime {
 impl Runtime {
     /// Starts the device loop.
     pub fn spawn(profile: Profile, options: Options, on_event: impl Fn(Event) + Send + 'static) -> Runtime {
+        // Only the main thread may read the keyboard layout (see mac::capture_layout);
+        // both apps start the runtime from it.
+        #[cfg(target_os = "macos")]
+        {
+            mac::capture_layout();
+            let _ = open_hid();
+        }
         let (commands, receiver) = mpsc::channel();
         let thread = thread::spawn(move || Loop::new(profile, options, receiver, on_event).run());
         Runtime { commands, thread: Some(thread) }
@@ -217,7 +245,7 @@ impl<F: Fn(Event)> Loop<F> {
     }
 
     fn run(mut self) {
-        let mut api = match HidApi::new() {
+        let mut api = match open_hid() {
             Ok(api) => api,
             Err(e) => {
                 (self.on_event)(Event::Waiting(format!("cannot initialise HID: {e}")));
@@ -229,7 +257,8 @@ impl<F: Fn(Event)> Loop<F> {
         #[cfg(target_os = "macos")]
         if !mac::accessibility_trusted(true) {
             (self.on_event)(Event::Status(
-                "macOS: allow Speed Editor Studio under System Settings › Privacy & Security › Accessibility,                  then restart it; until then it can't send keys to Resolve"
+                "macOS: allow Speed Editor Studio under System Settings › Privacy & Security › Accessibility, \
+                 then restart it; until then it can't send keys to Resolve"
                     .into(),
             ));
         }
@@ -268,7 +297,8 @@ impl<F: Fn(Event)> Loop<F> {
                 // Resolve has it.
                 Err(_) if !interfaces.is_empty() && processes::is_running(processes::RESOLVE_EXE) => {
                     let e = if self.virtual_device.is_some() {
-                        "DaVinci Resolve has the Speed Editor. Quit Resolve and start it again:                          the app then takes the Speed Editor and Resolve uses the emulated one."
+                        "DaVinci Resolve has the Speed Editor. Quit Resolve and start it again: \
+                         the app then takes the Speed Editor and Resolve uses the emulated one."
                     } else {
                         "DaVinci Resolve has the Speed Editor. Quit Resolve, then start it after this app."
                     }
@@ -281,6 +311,15 @@ impl<F: Fn(Event)> Loop<F> {
                     continue;
                 }
                 Err(e) => {
+                    #[cfg(target_os = "macos")]
+                    let e = if !interfaces.is_empty() && !mac::input_monitoring_allowed(true) {
+                        format!(
+                            "{e} (macOS: allow Speed Editor Studio under System Settings › Privacy & Security › \
+                             Input Monitoring, then reconnect; a Bluetooth Speed Editor needs it)"
+                        )
+                    } else {
+                        e
+                    };
                     if e != last_wait {
                         (self.on_event)(Event::Waiting(e.clone()));
                         last_wait = e;
@@ -377,14 +416,11 @@ impl<F: Fn(Event)> Loop<F> {
                 }
                 if reply.id.is_some() && reply.id == self.layout_request {
                     self.layout_request = None;
-                    match reply.ok.then(|| resolve_keys::KeyLayout::from_json(&reply.message)) {
-                        Some(Ok(layout)) => {
-                            let name = layout.preset.clone().unwrap_or_default();
-                            self.keys = layout;
-                            (self.on_event)(Event::Status(format!("Resolve keyboard layout: {name}")));
-                        }
-                        // Resolve not running yet: keep the defaults, ask again later.
-                        _ => {}
+                    // Resolve not running yet: keep the defaults, ask again later.
+                    if let Some(Ok(layout)) = reply.ok.then(|| resolve_keys::KeyLayout::from_json(&reply.message)) {
+                        let name = layout.preset.clone().unwrap_or_default();
+                        self.keys = layout;
+                        (self.on_event)(Event::Status(format!("Resolve keyboard layout: {name}")));
                     }
                     continue;
                 }

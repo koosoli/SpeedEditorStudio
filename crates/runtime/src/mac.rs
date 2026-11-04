@@ -3,12 +3,13 @@
 //! (menus, the frontmost app) and the keyboard layout (which key types which
 //! character). Declared by hand, so no wrapper crate's API can drift.
 //!
-//! UNTESTED: written without a Mac to run it on (see README, "macOS").
+//! Only partly tested on a Mac (see README, "macOS").
 
 #![allow(non_upper_case_globals, dead_code)]
 
-use std::ffi::{CString, c_void};
+use std::ffi::{CString, c_char, c_void};
 use std::ptr;
+use std::sync::{Arc, Mutex};
 
 pub type CFTypeRef = *const c_void;
 pub type CFStringRef = *const c_void;
@@ -119,6 +120,101 @@ unsafe extern "C" {
     -> CFTypeRef;
 }
 
+// --------------------------------------------------------- Input Monitoring
+
+#[link(name = "IOKit", kind = "framework")]
+unsafe extern "C" {
+    fn IOHIDCheckAccess(request_type: u32) -> u32;
+    fn IOHIDRequestAccess(request_type: u32) -> bool;
+}
+
+const kIOHIDRequestTypeListenEvent: u32 = 1;
+const kIOHIDAccessTypeGranted: u32 = 0;
+
+/// Whether the app may read input devices (Input Monitoring permission), which
+/// macOS requires for devices it counts as keyboards, such as a Bluetooth Speed
+/// Editor. With `prompt`, macOS asks the user if it hasn't been asked yet.
+pub fn input_monitoring_allowed(prompt: bool) -> bool {
+    unsafe {
+        if IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted {
+            return true;
+        }
+        prompt && IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+    }
+}
+
+// ----------------------------------------------------------------- media keys
+
+// Media and volume keys aren't ordinary key events on a Mac: the system takes
+// them as "aux control button" events, which only AppKit can build.
+#[link(name = "AppKit", kind = "framework")]
+unsafe extern "C" {}
+
+#[link(name = "objc")]
+unsafe extern "C" {
+    fn objc_getClass(name: *const c_char) -> *const c_void;
+    fn sel_registerName(name: *const c_char) -> *const c_void;
+    fn objc_msgSend();
+    fn objc_autoreleasePoolPush() -> *mut c_void;
+    fn objc_autoreleasePoolPop(pool: *mut c_void);
+}
+
+#[repr(C)]
+struct NSPoint {
+    x: f64,
+    y: f64,
+}
+
+const NS_EVENT_TYPE_SYSTEM_DEFINED: u64 = 14;
+const NX_SUBTYPE_AUX_CONTROL_BUTTONS: i16 = 8;
+
+/// Presses or releases a media key; `key` is an NX_KEYTYPE_* value (0 volume
+/// up, 1 volume down, 7 mute, 16 play/pause, 17 next, 18 previous).
+pub fn post_media_key(key: u32, down: bool) {
+    type Make = unsafe extern "C" fn(
+        *const c_void,
+        *const c_void,
+        u64,
+        NSPoint,
+        u64,
+        f64,
+        i64,
+        *const c_void,
+        i16,
+        i64,
+        i64,
+    ) -> *const c_void;
+    type Get = unsafe extern "C" fn(*const c_void, *const c_void) -> CFTypeRef;
+    unsafe {
+        let pool = objc_autoreleasePoolPush();
+        let state: i64 = if down { 0xa } else { 0xb };
+        let msg = objc_msgSend as unsafe extern "C" fn();
+        let make: Make = std::mem::transmute(msg);
+        let get: Get = std::mem::transmute(msg);
+        let event = make(
+            objc_getClass(c"NSEvent".as_ptr()),
+            sel_registerName(c"otherEventWithType:location:modifierFlags:timestamp:windowNumber:context:subtype:data1:data2:".as_ptr()),
+            NS_EVENT_TYPE_SYSTEM_DEFINED,
+            NSPoint { x: 0.0, y: 0.0 },
+            (state << 8) as u64,
+            0.0,
+            0,
+            ptr::null(),
+            NX_SUBTYPE_AUX_CONTROL_BUTTONS,
+            ((key as i64) << 16) | (state << 8),
+            -1,
+        );
+        if !event.is_null() {
+            // Owned by the NSEvent, which the pool releases.
+            let cg_event = get(event, sel_registerName(c"CGEvent".as_ptr()));
+            if !cg_event.is_null() {
+                CGEventPost(kCGHIDEventTap, cg_event);
+            }
+        }
+        objc_autoreleasePoolPop(pool);
+    }
+}
+
 // ------------------------------------------------------------ Accessibility
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -220,8 +316,29 @@ pub const UC_OPTION: u32 = 0x08;
 
 /// Which key (virtual key code) types which character on the current
 /// keyboard layout, and with which of Shift / Option. Characters reachable
-/// with fewer modifiers win.
-pub fn layout_table() -> Vec<(char, u16, u32)> {
+/// with fewer modifiers win. Read when `capture_layout` last ran; empty if it
+/// never could.
+pub fn layout_table() -> Arc<Vec<(char, u16, u32)>> {
+    LAYOUT.lock().unwrap().clone().unwrap_or_default()
+}
+
+type LayoutTable = Arc<Vec<(char, u16, u32)>>;
+static LAYOUT: Mutex<Option<LayoutTable>> = Mutex::new(None);
+
+unsafe extern "C" {
+    fn pthread_main_np() -> i32;
+}
+
+/// Reads the current keyboard layout into `layout_table`. macOS only lets the
+/// main thread ask for it (anything else is killed by a dispatch assertion), so
+/// on any other thread this does nothing and the previous table stays.
+pub fn capture_layout() {
+    if unsafe { pthread_main_np() } != 0 {
+        *LAYOUT.lock().unwrap() = Some(Arc::new(build_layout_table()));
+    }
+}
+
+fn build_layout_table() -> Vec<(char, u16, u32)> {
     let mut table: Vec<(char, u16, u32)> = Vec::new();
     unsafe {
         let Some(source) = Owned::new(TISCopyCurrentKeyboardLayoutInputSource()) else { return table };

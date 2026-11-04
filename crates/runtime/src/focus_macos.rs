@@ -4,7 +4,7 @@
 //! keyboard focus, so before sending one the runtime makes Resolve the
 //! frontmost app through the Accessibility API.
 //!
-//! UNTESTED: written without a Mac to run it on (see README, "macOS").
+//! Only partly tested on a Mac (see README, "macOS").
 
 use crate::mac::{self, Owned};
 use crate::processes;

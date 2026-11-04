@@ -102,7 +102,7 @@ const REAUTH_MARGIN: Duration = Duration::from_secs(10);
 
 impl Controller {
     pub fn open(api: &HidApi, interface: &Interface) -> Result<Controller> {
-        let dev = api.open_path(&interface.path)?;
+        let dev = open_path(api, &interface.path)?;
         let timeout = authenticate(&dev)?;
         Ok(Controller { dev, reauth_at: reauth_deadline(timeout) })
     }
@@ -138,6 +138,32 @@ impl Controller {
         self.dev.write(&[3, mode as u8, 0, 0, 0, 0, 255])?;
         Ok(())
     }
+}
+
+/// Opens the device. On macOS hidapi seizes it (exclusive access), which keeps
+/// DaVinci Resolve from opening it too. macOS refuses that for a Bluetooth
+/// Speed Editor, which it treats as a keyboard, so then it is opened shared.
+#[cfg(target_os = "macos")]
+fn open_path(api: &HidApi, path: &std::ffi::CStr) -> Result<HidDevice> {
+    match api.open_path(path) {
+        Ok(dev) => Ok(dev),
+        Err(exclusive_error) => {
+            api.set_open_exclusive(false);
+            let shared = api.open_path(path);
+            api.set_open_exclusive(true);
+            shared.map_err(|shared_error| {
+                // Name both failures: the exclusive one usually says why (permissions).
+                Error::Hid(HidError::HidApiError {
+                    message: format!("{exclusive_error}; shared: {shared_error}"),
+                })
+            })
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn open_path(api: &HidApi, path: &std::ffi::CStr) -> Result<HidDevice> {
+    Ok(api.open_path(path)?)
 }
 
 fn reauth_deadline(timeout: Duration) -> Instant {

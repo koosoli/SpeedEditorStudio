@@ -33,9 +33,15 @@ pub struct KeyLayout {
 
 impl Default for KeyLayout {
     fn default() -> Self {
-        let commands = DEFAULT_SHORTCUTS.iter().map(|(c, k)| (c.to_string(), vec![k.to_string()])).collect();
+        let commands = DEFAULT_SHORTCUTS.iter().map(|(c, k)| (c.to_string(), vec![default_spec(k)])).collect();
         KeyLayout { commands, preset: None }
     }
+}
+
+/// Resolve's default shortcuts are listed as on Windows; on a Mac its
+/// defaults use Cmd where those use Ctrl.
+fn default_spec(spec: &str) -> String {
+    if cfg!(target_os = "macos") { spec.replace("Ctrl+", "Cmd+") } else { spec.to_string() }
 }
 
 impl KeyLayout {
@@ -145,10 +151,9 @@ fn char_key(unit: u16) -> Option<(u16, Vec<u16>)> {
 /// code, marked with `MAC_KEY` for the output layer.
 #[cfg(target_os = "macos")]
 fn char_key(unit: u16) -> Option<(u16, Vec<u16>)> {
-    use std::sync::OnceLock;
-    static LAYOUT: OnceLock<Vec<(char, u16, u32)>> = OnceLock::new();
     let c = char::from_u32(unit as u32)?;
-    let &(_, code, modifiers) = LAYOUT.get_or_init(crate::mac::layout_table).iter().find(|(t, ..)| *t == c)?;
+    let table = crate::mac::layout_table();
+    let &(_, code, modifiers) = table.iter().find(|(t, ..)| *t == c)?;
     let mut needs = Vec::new();
     if modifiers & crate::mac::UC_SHIFT != 0 {
         needs.push(VK_SHIFT);
