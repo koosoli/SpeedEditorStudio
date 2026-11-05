@@ -7,7 +7,8 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/koosoli)
 
 > [!TIP]
-> **Don't want to compile? A ready-to-use Windows build is waiting for supporters.**
+> **Don't want to compile? Ready-to-use builds for Windows (and an untested one for macOS)
+> are waiting for supporters.**
 > 1. Become a supporter: a monthly membership through
 >    [GitHub Sponsors](https://github.com/sponsors/koosoli), or a one-time contribution through
 >    [Buy Me a Coffee](https://buymeacoffee.com/koosoli) (leave your GitHub username there).
@@ -21,8 +22,8 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 > either way.
 
 > [!WARNING]
-> **Windows only for now. macOS support is completely untested.** The macOS code exists and
-> compiles, but it has never been run on a Mac, with a Speed Editor or with DaVinci Resolve.
+> **Made for Windows. macOS support is completely untested.** The macOS code exists and is
+> built on a Mac, but it has never been run on a Mac with a Speed Editor or with DaVinci Resolve.
 > Assume it doesn't work until someone reports otherwise. See [macOS](#macos-untested).
 
 ![Speed Editor Studio](docs/images/studio.png)
@@ -140,8 +141,9 @@ a transition), SRC O/WR and others.
 
 ## Ready-made builds
 
-Ready-made Windows builds are for supporters (see the tip at the top); the builds repository
-is private, so its link gives a 404 until you've been added.
+Ready-made builds are for supporters (see the tip at the top); the builds repository
+is private, so its link gives a 404 until you've been added. Each release has a Windows zip
+and, for testing, an untested macOS zip (see [macOS](#macos-untested)).
 
 Speed Editor Studio needs **no installation**: unzip the download and start
 `Speed Editor Studio.exe`. Your settings are kept in `%APPDATA%\OpenSpeedEditor`.
@@ -202,14 +204,13 @@ trim. Decoded captures are in [`docs/captures`](docs/captures).
 
 > [!CAUTION]
 > **Completely untested.** Nobody has started this app on a Mac yet: not with a Speed
-> Editor, not with DaVinci Resolve, not at all. There are no macOS builds. Use it only if
-> you want to try it out and report back.
+> Editor, not with DaVinci Resolve, not at all. Supporters get a macOS build for testing; use
+> it only if you want to try it out and report back.
 
 The code is prepared for macOS, but **nobody has run it on a Mac with a Speed Editor and
-DaVinci Resolve yet.** It compiles for macOS (Apple Silicon and Intel; the
-[macOS build](.github/workflows/macos.yml) builds and tests it on a real Mac on GitHub), and
-the macOS parts were written to mirror the Windows ones. Expect rough edges, and please
-report what works and what doesn't.
+DaVinci Resolve yet.** The [macOS build](.github/workflows/macos.yml) builds and tests it on a
+real Mac on GitHub (one app for Apple Silicon and Intel), and the macOS parts were written to
+mirror the Windows ones. Expect rough edges, and please report what works and what doesn't.
 
 What's different on macOS:
 
@@ -228,8 +229,10 @@ What's different on macOS:
   screen.
 - **Script actions** need a Python 3 on the Mac (Resolve's scripting requirement); the app
   looks for one bundled with Resolve, then `/usr/bin/python3`.
-- **Not signed.** The app isn't signed or notarized, so macOS blocks the first start:
-  right-click the app › **Open** (or allow it under *Privacy & Security*).
+- **Not signed.** The app isn't signed by Apple or notarized, so macOS blocks the first start:
+  right-click the app › **Open**, or on newer macOS try to open it once, then *System Settings ›
+  Privacy & Security › Open Anyway*. If macOS calls the app damaged, run
+  `xattr -dr com.apple.quarantine "/Applications/Speed Editor Studio.app"`.
 - Settings are kept in `~/Library/Application Support/OpenSpeedEditor`.
 
 To build it yourself on a Mac: install [Rust](https://rustup.rs/) and Node.js, then in

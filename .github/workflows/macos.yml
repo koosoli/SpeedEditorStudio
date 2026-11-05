@@ -1,16 +1,47 @@
-# Builds Speed Editor Studio for macOS (Apple Silicon and Intel) and runs the
-# tests on a real Mac. The macOS version is UNTESTED with a Speed Editor and
-# DaVinci Resolve; this only proves it compiles. Started by hand
-# (Actions › macOS build › Run workflow), because macOS minutes are limited.
+# Builds Speed Editor Studio for macOS (Apple Silicon and Intel, one universal
+# app), runs the tests on a real Mac and uploads the zip to the release of the
+# same version in the PRIVATE supporters repository
+# (SpeedEditorStudio/SpeedEditorStudio-Builds). Nothing is uploaded to this
+# public repository: no workflow artifact, no release.
+#
+# The macOS version is UNTESTED with a Speed Editor and DaVinci Resolve.
+#
+# Needs the repository secret BUILDS_TOKEN: a fine-grained personal access
+# token with access to SpeedEditorStudio-Builds only, permission
+# "Contents: Read and write".
+#
+# Started by hand (Actions > macOS build > Run workflow).
 name: macOS build
 
 on:
   workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload the zip to the private builds repository
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  BUILDS_REPO: SpeedEditorStudio/SpeedEditorStudio-Builds
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
+      - name: Check the upload token
+        if: inputs.upload
+        env:
+          GH_TOKEN: ${{ secrets.BUILDS_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::The secret BUILDS_TOKEN is missing (see the top of macos.yml)."
+            exit 1
+          fi
+          gh repo view "$BUILDS_REPO" --json name > /dev/null
+
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
@@ -19,6 +50,10 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Version
+        id: version
+        run: echo "version=$(jq -r .version apps/studio/tauri.conf.json)" >> "$GITHUB_OUTPUT"
+
       - name: Tests
         run: cargo test --workspace
 
@@ -26,18 +61,73 @@ jobs:
         working-directory: apps/studio
         run: npx --yes @tauri-apps/cli@2 icon icons/icon.png --output icons
 
+      # signingIdentity "-" signs ad hoc. Not a real signature (Gatekeeper still
+      # asks once), but without any signature Apple Silicon Macs report a
+      # downloaded app as "damaged" and refuse to open it at all.
       - name: Build the app (universal)
         working-directory: apps/studio
         run: >
           npx --yes @tauri-apps/cli@2 build --target universal-apple-darwin --bundles app
-          --config '{"bundle":{"active":true,"icon":["icons/icon.icns","icons/icon.png"]}}'
+          --config '{"bundle":{"active":true,"icon":["icons/icon.icns","icons/icon.png"],"macOS":{"signingIdentity":"-"}}}'
 
-      - name: Zip the app
+      - name: Package
+        id: package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cd target/universal-apple-darwin/release/bundle/macos
-          ditto -c -k --keepParent "Speed Editor Studio.app" "$GITHUB_WORKSPACE/SpeedEditorStudio-macos-universal.zip"
+          name="SpeedEditorStudio-$VERSION-macos-universal"
+          mkdir -p "pkg/$name"
+          ditto "target/universal-apple-darwin/release/bundle/macos/Speed Editor Studio.app" \
+                "pkg/$name/Speed Editor Studio.app"
+          cp LICENSE NOTICE "pkg/$name/"
+          cat > "pkg/$name/READ ME.txt" <<EOF
+          Speed Editor Studio $VERSION for macOS (Apple Silicon and Intel)
+          Copyright 2026 Olivier KOOS. Licensed under the PolyForm Noncommercial
+          License 1.0.0 (see LICENSE). Thank you for supporting the project!
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: SpeedEditorStudio-macos-universal
-          path: SpeedEditorStudio-macos-universal.zip
+          THIS MACOS BUILD IS COMPLETELY UNTESTED. Nobody has run it on a Mac with a
+          Speed Editor and DaVinci Resolve yet. Please report what works and what
+          doesn't: https://github.com/koosoli/SpeedEditorStudio/issues
+
+          Getting started
+          1. Move "Speed Editor Studio.app" to Applications.
+          2. The app isn't signed by Apple, so macOS blocks the first start.
+             Right-click the app > Open. On newer macOS versions: try to open it
+             once, then System Settings > Privacy & Security > "Open Anyway".
+             If macOS says the app is damaged, run this in Terminal:
+               xattr -dr com.apple.quarantine "/Applications/Speed Editor Studio.app"
+          3. Allow the app under System Settings > Privacy & Security >
+             Accessibility (needed to send keys to Resolve and use its menus).
+             If the Speed Editor isn't found, also allow it under Input Monitoring.
+          4. Turn on "Connect" and "Active" (top bar), and "Start at login" under
+             the settings gear.
+          5. Start Speed Editor Studio BEFORE DaVinci Resolve: whoever starts first
+             owns the Speed Editor. If Resolve got it first, quit Resolve and start
+             it again.
+          6. For script actions, set DaVinci Resolve's Preferences > System >
+             General > "External scripting using" to "Local". They need Python 3.
+
+          There is no pass-through on macOS: the app imitates the native keys with
+          Resolve's shortcuts and menus. Functions without a Resolve keyboard
+          command (CLOSE UP, SYNC BIN, SRC O/WR, ...) only work if you map them.
+
+          Your profile is saved in ~/Library/Application Support/OpenSpeedEditor.
+          EOF
+          (cd pkg && ditto -c -k --keepParent "$name" "$name.zip")
+          echo "zip=pkg/$name.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to the private builds repository
+        if: inputs.upload
+        env:
+          GH_TOKEN: ${{ secrets.BUILDS_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          ZIP: ${{ steps.package.outputs.zip }}
+        run: |
+          tag="v$VERSION"
+          if ! gh release view "$tag" -R "$BUILDS_REPO" > /dev/null 2>&1; then
+            gh release create "$tag" -R "$BUILDS_REPO" --prerelease \
+              --title "Speed Editor Studio $VERSION" \
+              --notes "macOS build (completely untested)."
+          fi
+          gh release upload "$tag" "$ZIP" -R "$BUILDS_REPO" --clobber
+          echo "Uploaded $(basename "$ZIP") to $BUILDS_REPO release $tag" >> "$GITHUB_STEP_SUMMARY"
