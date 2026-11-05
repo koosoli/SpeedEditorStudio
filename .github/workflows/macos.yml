@@ -1,47 +1,29 @@
 # Builds Speed Editor Studio for macOS (Apple Silicon and Intel, one universal
-# app), runs the tests on a real Mac and uploads the zip to the release of the
-# same version in the PRIVATE supporters repository
-# (SpeedEditorStudio/SpeedEditorStudio-Builds). Nothing is uploaded to this
-# public repository: no workflow artifact, no release.
+# app) and runs the tests on a real Mac.
+#
+# The zip is kept on the run for one day only. Builds are for supporters: download
+# it right away, upload it to the release in the PRIVATE repository
+# SpeedEditorStudio/SpeedEditorStudio-Builds and delete the artifact here:
+#
+#   gh run download <run-id> -R koosoli/SpeedEditorStudio -D dist
+#   gh release upload v<version> dist/*/SpeedEditorStudio-*-macos-universal.zip \
+#     -R SpeedEditorStudio/SpeedEditorStudio-Builds --clobber
+#   gh api -X DELETE repos/koosoli/SpeedEditorStudio/actions/artifacts/<artifact-id>
 #
 # The macOS version is UNTESTED with a Speed Editor and DaVinci Resolve.
-#
-# Needs the repository secret BUILDS_TOKEN: a fine-grained personal access
-# token with access to SpeedEditorStudio-Builds only, permission
-# "Contents: Read and write".
-#
 # Started by hand (Actions > macOS build > Run workflow).
 name: macOS build
 
 on:
   workflow_dispatch:
-    inputs:
-      upload:
-        description: Upload the zip to the private builds repository
-        type: boolean
-        default: true
 
 permissions:
   contents: read
-
-env:
-  BUILDS_REPO: SpeedEditorStudio/SpeedEditorStudio-Builds
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Check the upload token
-        if: inputs.upload
-        env:
-          GH_TOKEN: ${{ secrets.BUILDS_TOKEN }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::The secret BUILDS_TOKEN is missing (see the top of macos.yml)."
-            exit 1
-          fi
-          gh repo view "$BUILDS_REPO" --json name > /dev/null
-
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
@@ -116,18 +98,11 @@ jobs:
           (cd pkg && ditto -c -k --keepParent "$name" "$name.zip")
           echo "zip=pkg/$name.zip" >> "$GITHUB_OUTPUT"
 
-      - name: Upload to the private builds repository
-        if: inputs.upload
-        env:
-          GH_TOKEN: ${{ secrets.BUILDS_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
-          ZIP: ${{ steps.package.outputs.zip }}
-        run: |
-          tag="v$VERSION"
-          if ! gh release view "$tag" -R "$BUILDS_REPO" > /dev/null 2>&1; then
-            gh release create "$tag" -R "$BUILDS_REPO" --prerelease \
-              --title "Speed Editor Studio $VERSION" \
-              --notes "macOS build (completely untested)."
-          fi
-          gh release upload "$tag" "$ZIP" -R "$BUILDS_REPO" --clobber
-          echo "Uploaded $(basename "$ZIP") to $BUILDS_REPO release $tag" >> "$GITHUB_STEP_SUMMARY"
+      # Already a zip, so no extra compression; gh run download unpacks the
+      # artifact and leaves the zip itself.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpeedEditorStudio-${{ steps.version.outputs.version }}-macos-universal
+          path: ${{ steps.package.outputs.zip }}
+          retention-days: 1
+          compression-level: 0
