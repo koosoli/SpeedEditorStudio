@@ -5,6 +5,7 @@ __pycache__/
 # Raw USB captures record the whole bus (other devices too); only decoded logs are kept.
 *.pcap
 /dist/
+.DS_Store
 
 # Agent instructions stay local
 /AGENTS.md

@@ -9,7 +9,7 @@
 //! Like on Windows, every key is reference counted, so two held mappings that
 //! share a modifier don't release it under each other.
 //!
-//! UNTESTED: written without a Mac to run it on (see README, "macOS"). Needs
+//! Only partly tested on a Mac (see README, "macOS"). Needs
 //! the Accessibility permission (System Settings › Privacy & Security).
 
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ pub struct Input {
     held: HashMap<u16, u32>,
     source: Option<Owned>,
     /// Character → (Mac key code, Shift/Option needed), for the layout in use.
-    layout: Vec<(char, u16, u32)>,
+    layout: std::sync::Arc<Vec<(char, u16, u32)>>,
 }
 
 impl Default for Input {
@@ -115,7 +115,7 @@ impl Input {
     /// Modifier flags of the modifiers currently held.
     fn flags(&self) -> u64 {
         let mut flags = 0;
-        for (&key, _) in &self.held {
+        for &key in self.held.keys() {
             flags |= match key {
                 VK_SHIFT => mac::kCGEventFlagMaskShift,
                 VK_CONTROL => mac::kCGEventFlagMaskControl,
@@ -128,6 +128,10 @@ impl Input {
     }
 
     fn send_key(&self, key: u16, down: bool) {
+        if let Some(media) = media_key(key) {
+            mac::post_media_key(media, down);
+            return;
+        }
         let Some((code, extra)) = self.mac_key(key) else { return };
         let source = self.source.as_ref().map_or(std::ptr::null(), |s| s.get());
         if let Some(event) = Owned::new(unsafe { mac::CGEventCreateKeyboardEvent(source, code, down) }) {
@@ -171,9 +175,34 @@ impl Drop for Input {
     }
 }
 
-/// Opens a program, file or URL the way Finder would.
+/// Opens a program, file or URL the way Finder would. A bare name such as
+/// "Calculator" opens the app of that name.
 pub fn run(target: &str) -> std::io::Result<()> {
-    Command::new("open").arg(target).spawn().map(drop)
+    let mut command = Command::new("open");
+    let path = std::path::Path::new(target);
+    let is_app_name = !target.contains(['/', ':', '.']) || (target.ends_with(".app") && !path.exists());
+    if is_app_name {
+        command.arg("-a");
+    }
+    let mut child = command.arg(target).spawn()?;
+    // Reap `open` when it's done, so no zombie process stays behind.
+    std::thread::spawn(move || {
+        let _ = child.wait();
+    });
+    Ok(())
+}
+
+/// The NX_KEYTYPE_* value of a media key (Windows virtual key codes).
+fn media_key(vk: u16) -> Option<u32> {
+    Some(match vk {
+        0xaf => 0,  // volume up
+        0xae => 1,  // volume down
+        0xad => 7,  // mute
+        0xb3 => 16, // play / pause
+        0xb0 => 17, // next track
+        0xb1 => 18, // previous track
+        _ => return None,
+    })
 }
 
 /// Mac key codes (kVK_*) of keys that don't depend on the layout.
@@ -228,9 +257,6 @@ fn named_key(vk: u16) -> Option<u16> {
         0x67 => 0x59,
         0x68 => 0x5b,
         0x69 => 0x5c, // keypad 9
-        0xad => 0x4a, // mute
-        0xae => 0x49, // volume down
-        0xaf => 0x48, // volume up
         _ => return None,
     })
 }
@@ -266,4 +292,30 @@ fn us_key(c: char) -> Option<u16> {
         ('\\', 0x2a), (',', 0x2b), ('/', 0x2c), ('n', 0x2d), ('m', 0x2e), ('.', 0x2f), ('`', 0x32),
     ];
     KEYS.iter().find(|(k, _)| *k == c).map(|&(_, code)| code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Presses the mute key twice (needs the Accessibility permission for the
+    /// test runner): `cargo test -p runtime -- --ignored media_keys`.
+    #[test]
+    #[ignore = "changes the system volume state and needs the Accessibility permission"]
+    fn media_keys_reach_the_system() {
+        let muted = || {
+            let out = Command::new("osascript").args(["-e", "output muted of (get volume settings)"]).output().unwrap();
+            String::from_utf8_lossy(&out.stdout).trim() == "true"
+        };
+        let before = muted();
+        let mut input = Input::default();
+        let mute = Shortcut::parse("volume_mute").unwrap();
+        input.tap(&mute);
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        let after = muted();
+        input.tap(&mute);
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        assert_ne!(before, after, "mute key had no effect");
+        assert_eq!(before, muted());
+    }
 }

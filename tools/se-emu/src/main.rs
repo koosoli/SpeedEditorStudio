@@ -69,7 +69,7 @@ fn run() -> Result<(), String> {
 
 fn send(emu: &Emulator, line: &str) {
     let digits: String = line.chars().filter(|c| !c.is_whitespace()).collect();
-    let bytes: Option<Vec<u8>> = (digits.len() % 2 == 0)
+    let bytes: Option<Vec<u8>> = digits.len().is_multiple_of(2)
         .then(|| (0..digits.len()).step_by(2).map(|i| u8::from_str_radix(&digits[i..i + 2], 16).ok()).collect())
         .flatten();
     match bytes {

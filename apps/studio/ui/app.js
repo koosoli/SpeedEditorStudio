@@ -666,7 +666,7 @@ function actionSection(title, current, onSet, note) {
   } else if (kind === "run") {
     const input = el("input");
     input.value = current.run;
-    input.placeholder = "notepad.exe, C:\\path\\app.exe or https://…";
+    input.placeholder = ON_MAC ? "TextEdit, /Applications/App.app or https://…" : "notepad.exe, C:\\path\\app.exe or https://…";
     input.onchange = () => onSet({ run: input.value.trim() });
     box.append(input);
   } else if (kind === "resolve") {
@@ -811,7 +811,7 @@ function shortcutField(label, value, onSet, note) {
   const wrap = el("div", "shortcut");
   const input = el("input");
   input.value = value;
-  input.placeholder = "e.g. ctrl+shift+m";
+  input.placeholder = ON_MAC ? "e.g. cmd+shift+m" : "e.g. ctrl+shift+m";
   input.spellcheck = false;
   const pretty = el("span", "pretty", value ? prettyShortcut(value) : "");
   const err = el("span", "note error");
@@ -1165,19 +1165,21 @@ async function init() {
     try {
       await api.invoke("set_autostart", { enabled: e.target.checked });
       log(e.target.checked
-        ? "Starts when you sign in, hidden in the tray, so it has the Speed Editor before Resolve starts"
-        : "No longer starts when you sign in");
+        ? `Starts when you ${ON_MAC ? "log" : "sign"} in, hidden in the ${ON_MAC ? "menu bar" : "tray"}, so it has the Speed Editor before Resolve starts`
+        : `No longer starts when you ${ON_MAC ? "log" : "sign"} in`);
     } catch (err) {
       e.target.checked = !e.target.checked;
-      log("Start with Windows: " + err);
+      log((ON_MAC ? "Start at login: " : "Start with Windows: ") + err);
     }
   };
   if (window.__TAURI__) {
     $("autostartToggle").checked = await api.invoke("autostart_enabled").catch(() => false);
   }
-  if (/Mac/.test(navigator.platform || navigator.userAgent)) {
+  if (ON_MAC) {
     // macOS names it differently, and has no pass-through (see README).
-    $("autostartToggle").parentElement.querySelector("span:last-child").textContent = "Start at login";
+    const label = $("autostartToggle").parentElement;
+    label.querySelector("span:last-child").textContent = "Start at login";
+    label.title = "Starts the app hidden in the menu bar when you log in, so it holds the Speed Editor before DaVinci Resolve starts. Closing the window keeps the app running in the menu bar; quit it from the menu bar icon or with ⌘Q.";
   }
 
   // Restore the last connection settings, so the app picks up where it was.
@@ -1192,7 +1194,7 @@ async function init() {
   $("paletteSearch").oninput = e => { S.search = e.target.value; renderPalette(); };
   window.addEventListener("keydown", e => {
     if (recorder) return;
-    if (e.ctrlKey && e.code === "KeyS") { e.preventDefault(); save(); }
+    if ((ON_MAC ? e.metaKey : e.ctrlKey) && e.code === "KeyS") { e.preventDefault(); save(); }
     if (e.code === "Escape" && document.activeElement.tagName !== "INPUT") { S.selected = null; render(); }
   });
   window.addEventListener("beforeunload", e => { if (dirty()) e.preventDefault(); });

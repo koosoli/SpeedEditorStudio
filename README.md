@@ -7,7 +7,7 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/koosoli)
 
 > [!TIP]
-> **Don't want to compile? Ready-to-use builds for Windows (and an untested one for macOS)
+> **Don't want to compile? Ready-to-use builds for Windows (and a barely tested one for macOS)
 > are waiting for supporters.**
 > 1. Become a supporter: a monthly membership through
 >    [GitHub Sponsors](https://github.com/sponsors/koosoli), or a one-time contribution through
@@ -22,9 +22,10 @@ Resolve, while every key and the jog wheel keep their native behaviour.
 > either way.
 
 > [!WARNING]
-> **Made for Windows. macOS support is completely untested.** The macOS code exists and is
-> built on a Mac, but it has never been run on a Mac with a Speed Editor or with DaVinci Resolve.
-> Assume it doesn't work until someone reports otherwise. See [macOS](#macos-untested).
+> **Made for Windows. macOS is only partly tested.** On one Mac the app builds, starts and
+> takes over the Speed Editor over USB, but nobody has used it with DaVinci Resolve yet
+> (typing shortcuts into Resolve, clicking its menus). There is no pass-through on macOS.
+> Expect rough edges and please report what works. See [macOS](#macos).
 
 ![Speed Editor Studio](docs/images/studio.png)
 
@@ -113,7 +114,7 @@ Resolve.**
 
 ## Requirements
 
-- Windows 10 or 11. macOS is **completely untested**, see [macOS](#macos-untested).
+- Windows 10 or 11, or macOS 11 or newer (see [macOS](#macos)).
 - DaVinci Resolve (developed and measured with Resolve Studio 21.1). For the script actions,
   set *Preferences › System › General › External scripting using* to **Local**.
 - A DaVinci Resolve Speed Editor, over USB or paired over Bluetooth.
@@ -143,7 +144,7 @@ a transition), SRC O/WR and others.
 
 Ready-made builds are for supporters (see the tip at the top); the builds repository
 is private, so its link gives a 404 until you've been added. Each release has a Windows zip
-and, for testing, an untested macOS zip (see [macOS](#macos-untested)).
+and, for testing, a barely tested macOS zip (see [macOS](#macos)).
 
 Speed Editor Studio needs **no installation**: unzip the download and start
 `Speed Editor Studio.exe`. Your settings are kept in `%APPDATA%\OpenSpeedEditor`.
@@ -154,7 +155,7 @@ protected your PC". Click **More info › Run anyway**; it won't ask again.
 ## Build and run
 
 You need [Rust](https://rustup.rs/) (stable) and the WebView2 runtime, which Windows 11 has
-built in.
+built in. (On a Mac, see [Build the app bundle](#build-the-app-bundle).)
 
 ```bash
 cargo build --release
@@ -200,17 +201,14 @@ Everything measured along the way is in [`docs/FINDINGS.md`](docs/FINDINGS.md), 
 units per frame and the shuttle curve to which key sequences give a ripple, roll or slip
 trim. Decoded captures are in [`docs/captures`](docs/captures).
 
-## macOS (untested)
+## macOS
 
-> [!CAUTION]
-> **Completely untested.** Nobody has started this app on a Mac yet: not with a Speed
-> Editor, not with DaVinci Resolve, not at all. Supporters get a macOS build for testing; use
-> it only if you want to try it out and report back.
-
-The code is prepared for macOS, but **nobody has run it on a Mac with a Speed Editor and
-DaVinci Resolve yet.** The [macOS build](.github/workflows/macos.yml) builds and tests it on a
-real Mac on GitHub (one app for Apple Silicon and Intel), and the macOS parts were written to
-mirror the Windows ones. Expect rough edges, and please report what works and what doesn't.
+> [!NOTE]
+> Partly tested. What has been checked on a Mac (Apple Silicon, macOS 26): the workspace
+> builds and its tests pass, the app bundle builds, is signed and starts, the Speed Editor
+> opens and authenticates over USB, Resolve's scripting library loads in the helper, and
+> media keys reach the system. Not checked end to end: typing shortcuts into a running Resolve
+> and clicking its menus. Please report what works and what doesn't.
 
 What's different on macOS:
 
@@ -224,20 +222,37 @@ What's different on macOS:
   login**), then Resolve.
 - **Permissions.** On first start macOS asks to allow the app under *System Settings › Privacy
   & Security › Accessibility*; without it the app can't send keys to Resolve or use its menus.
-  If the device isn't seen, also allow it under *Input Monitoring*.
+  If the device isn't seen, also allow it under *Input Monitoring*. The bundle is signed ad hoc,
+  so macOS treats every rebuild as a new app: run `just reset-permissions` and allow it again
+  if the permission is set but the keys don't arrive.
+- **Shortcuts use ⌘.** `cmd` (or `win`) in a shortcut is the Command key. The first-start profile
+  is [`profiles/example-macos.toml`](profiles/example-macos.toml): ⌘ instead of Ctrl, app names
+  (`Calculator`) instead of `.exe` files, and no F21–F24, which a Mac keyboard doesn't have.
+  Resolve's own shortcuts are read from its keyboard layout, so they follow your Resolve preset.
 - **Resolve's menus** are clicked through the Accessibility API, without opening them on
   screen.
 - **Script actions** need a Python 3 on the Mac (Resolve's scripting requirement); the app
-  looks for one bundled with Resolve, then `/usr/bin/python3`.
-- **Not signed.** The app isn't signed by Apple or notarized, so macOS blocks the first start:
-  right-click the app › **Open**, or on newer macOS try to open it once, then *System Settings ›
-  Privacy & Security › Open Anyway*. If macOS calls the app damaged, run
+  looks for one bundled with Resolve, then `/usr/bin/python3` (Xcode Command Line Tools),
+  then Homebrew's. Set *External scripting using* to **Local** in Resolve.
+- **Menu bar.** The app lives in the menu bar: closing the window hides it, clicking the Dock
+  icon shows it again, **Quit** in the menu bar menu or ⌘Q ends it.
+- **Not notarized.** The app is signed ad hoc, not with a Developer ID, so macOS blocks the
+  first start of a downloaded copy: right-click the app › **Open**, or on newer macOS try to
+  open it once, then *System Settings › Privacy & Security › Open Anyway*. If macOS calls the app damaged, run
   `xattr -dr com.apple.quarantine "/Applications/Speed Editor Studio.app"`.
 - Settings are kept in `~/Library/Application Support/OpenSpeedEditor`.
 
-To build it yourself on a Mac: install [Rust](https://rustup.rs/) and Node.js, then in
-`apps/studio` run `npx @tauri-apps/cli@2 icon icons/icon.png --output icons` and
-`npx @tauri-apps/cli@2 build --bundles app --config '{"bundle":{"active":true,"icon":["icons/icon.icns","icons/icon.png"]}}'`.
+### Build the app bundle
+
+You need [Rust](https://rustup.rs/), [Node.js](https://nodejs.org/) (the Tauri CLI is fetched
+by `npx`) and [just](https://github.com/casey/just) (`brew install just`).
+
+```bash
+just bundle             # Speed Editor Studio.app for this Mac, in dist/
+just bundle-universal   # the same for Apple Silicon and Intel in one (needs both Rust targets)
+just install            # copies it to /Applications
+just                    # lists every recipe: test, clippy, run, zip, icons, ...
+```
 
 ## Known limits
 
@@ -249,7 +264,7 @@ To build it yourself on a Mac: install [Rust](https://rustup.rs/) and Node.js, t
   handshake (the device side uses an unknown calculation). Resolve retries and then accepts it
   anyway; a future Resolve version might be stricter.
 - The jog wheel's click is mechanical only. The device reports nothing, so it can't be mapped.
-- macOS is completely untested and has no pass-through, see [macOS](#macos-untested).
+- macOS has no pass-through, and typing into a running Resolve is not yet checked on a Mac, see [macOS](#macos).
 
 ## License
 

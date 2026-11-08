@@ -723,7 +723,7 @@ impl Engine {
             (Mode::Custom, _) if self.blink_on => led(&keys[self.page]) | self.solo_led() | self.scope_led(),
             (Mode::Custom, _) => self.solo_led() | self.scope_led(),
             (Mode::Normal, Some(start)) => {
-                let lit = (self.now_ms.saturating_sub(start) / FLASH_HALF_PERIOD_MS) % 2 == 0;
+                let lit = (self.now_ms.saturating_sub(start) / FLASH_HALF_PERIOD_MS).is_multiple_of(2);
                 if lit { keys.iter().map(led).fold(0, |a, b| a | b) } else { 0 }
             }
             (Mode::Normal, None) => led(&keys[self.normal_selected]),
