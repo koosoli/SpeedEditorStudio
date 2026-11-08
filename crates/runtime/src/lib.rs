@@ -56,7 +56,7 @@ const RESOLVE_CHECK: Duration = Duration::from_millis(500);
 /// The HID context of this run. Windows makes a fresh one each time.
 #[cfg(not(target_os = "macos"))]
 fn open_hid() -> Result<impl std::ops::DerefMut<Target = HidApi>, String> {
-    HidApi::new().map_err(|e| e.to_string())
+    HidApi::new().map(Box::new).map_err(|e| e.to_string())
 }
 
 /// The HID context of this run. On macOS hidapi ties its device manager to the run loop
